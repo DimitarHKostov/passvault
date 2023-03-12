@@ -17,8 +17,8 @@ const (
 )
 
 var (
-	invalidTokenError = errors.New(invalidTokenErrorMessage)
-	expiredTokenError = errors.New(expiredTokenErrorMessage)
+	InvalidTokenError = errors.New(invalidTokenErrorMessage)
+	ExpiredTokenError = errors.New(expiredTokenErrorMessage)
 	jwtManager        *JWTManager
 )
 
@@ -52,7 +52,7 @@ func (jwtm *JWTManager) VerifyToken(token string) (*types.Payload, error) {
 	keyFunc := func(token *jwt.Token) (interface{}, error) {
 		_, ok := token.Method.(*jwt.SigningMethodHMAC)
 		if !ok {
-			return nil, invalidTokenError
+			return nil, InvalidTokenError
 		}
 		return []byte(jwtm.SecretKey), nil
 	}
@@ -60,15 +60,15 @@ func (jwtm *JWTManager) VerifyToken(token string) (*types.Payload, error) {
 	jwtToken, err := jwt.ParseWithClaims(token, &types.Payload{}, keyFunc)
 	if err != nil {
 		verr, ok := err.(*jwt.ValidationError)
-		if ok && errors.Is(verr.Inner, expiredTokenError) {
-			return nil, expiredTokenError
+		if ok && errors.Is(verr.Inner, ExpiredTokenError) {
+			return nil, ExpiredTokenError
 		}
-		return nil, invalidTokenError
+		return nil, InvalidTokenError
 	}
 
 	payload, ok := jwtToken.Claims.(*types.Payload)
 	if !ok {
-		return nil, invalidTokenError
+		return nil, InvalidTokenError
 	}
 
 	return payload, nil

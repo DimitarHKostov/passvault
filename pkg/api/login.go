@@ -5,15 +5,8 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"passvault/pkg/cookie"
-	"passvault/pkg/hash"
 	"passvault/pkg/types"
 	"passvault/pkg/validation"
-)
-
-var (
-	cookieManager = cookie.Get()
-	hasher        = hash.Get()
 )
 
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +31,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashedPassword := hasher.Hash(credentials.Password)
+	hashedPassword := hashManager.Hash(credentials.Password)
 	validation := validation.LoginValidation{PasswordToValidate: hashedPassword}
 	if err := validation.Validate(); err != nil {
 		log.Println(err)
@@ -46,13 +39,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookie, err := cookieManager.Produce(credentials)
+	cookie, err := cookieManager.Produce(types.CookieName, credentials)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
+	sessionManager.Set(cookie.Value)
 	http.SetCookie(w, cookie)
 
 	w.WriteHeader(http.StatusOK)

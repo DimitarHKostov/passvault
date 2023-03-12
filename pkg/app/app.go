@@ -18,8 +18,6 @@ var (
 	basePath *string
 )
 
-const ()
-
 func (a *App) constructPath(operation operation.Operation) string {
 	if basePath == nil {
 		basePath = new(string)
@@ -36,8 +34,10 @@ func (a *App) addEndpoint(path string, handlerFunc func(http.ResponseWriter, *ht
 func (a *App) registerEndpoints() {
 	handlerFuncFactory := handler_func_factory.Get()
 	loginHandlerFunc := handlerFuncFactory.Produce(operation.Login)
+	logoutHandlerFunc := handlerFuncFactory.Produce(operation.Logout)
 
 	a.addEndpoint(a.constructPath(operation.Login), loginHandlerFunc, http.MethodPost)
+	a.addEndpoint(a.constructPath(operation.Logout), logoutHandlerFunc, http.MethodGet)
 }
 
 func (a *App) Run() error {

@@ -24,12 +24,10 @@ func Get() *HandlerFuncFactory {
 func (hff *HandlerFuncFactory) Produce(op operation.Operation) func(http.ResponseWriter, *http.Request) {
 	switch op {
 	case operation.Login:
-		return hff.ProduceLoginHandlerFunc()
+		return http.HandlerFunc(api.Login)
+	case operation.Logout:
+		return http.HandlerFunc(api.Logout)
 	default:
 		return nil
 	}
-}
-
-func (hff *HandlerFuncFactory) ProduceLoginHandlerFunc() func(http.ResponseWriter, *http.Request) {
-	return http.HandlerFunc(api.Login)
 }
