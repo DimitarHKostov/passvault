@@ -1,0 +1,47 @@
+package app
+
+import (
+	"fmt"
+	"net/http"
+	"passvault/pkg/handler_func_factory"
+	"passvault/pkg/operation"
+
+	"github.com/gorilla/mux"
+)
+
+type App struct {
+	AppRouter *mux.Router
+	AppConfig AppConfig
+}
+
+var (
+	basePath *string
+)
+
+const ()
+
+func (a *App) constructPath(operation operation.Operation) string {
+	if basePath == nil {
+		basePath = new(string)
+		*basePath = fmt.Sprintf("/api/%s", a.AppConfig.AppVersion)
+	}
+
+	return *basePath + fmt.Sprintf("/%s", operation.String())
+}
+
+func (a *App) addEndpoint(path string, handlerFunc func(http.ResponseWriter, *http.Request), methods ...string) {
+	a.AppRouter.PathPrefix(path).HandlerFunc(handlerFunc).Methods(methods...)
+}
+
+func (a *App) registerEndpoints() {
+	handlerFuncFactory := handler_func_factory.Get()
+	loginHandlerFunc := handlerFuncFactory.Produce(operation.Login)
+
+	a.addEndpoint(a.constructPath(operation.Login), loginHandlerFunc, http.MethodPost)
+}
+
+func (a *App) Run() error {
+	a.registerEndpoints()
+
+	return http.ListenAndServe(a.AppConfig.AppPort, a.AppRouter)
+}
