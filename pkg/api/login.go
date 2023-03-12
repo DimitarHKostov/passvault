@@ -5,16 +5,15 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"passvault/pkg/cookie"
 	"passvault/pkg/hash"
-	"passvault/pkg/jwt"
 	"passvault/pkg/types"
 	"passvault/pkg/validation"
-	"time"
 )
 
 var (
-	hasher     = hash.Get()
-	jwtManager = jwt.Get()
+	cookieManager = cookie.Get()
+	hasher        = hash.Get()
 )
 
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -47,15 +46,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := jwtManager.GenerateToken(5 * time.Minute)
+	cookie, err := cookieManager.Produce(credentials)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	cookie := http.Cookie{Name: "passvault-cookie", Value: token, Expires: time.Now().Add(5 * time.Minute), HttpOnly: true}
-	http.SetCookie(w, &cookie)
+	http.SetCookie(w, cookie)
 
-	w.Write([]byte("success"))
+	w.WriteHeader(http.StatusOK)
 }
