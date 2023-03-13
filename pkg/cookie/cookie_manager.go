@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+const (
+	expirationTime = 30 * time.Second
+)
+
 var (
 	cookieManager *CookieManager
 )
@@ -27,12 +31,12 @@ func Get() *CookieManager {
 }
 
 func (c *CookieManager) Produce(name string, credentials types.Credentials) (*http.Cookie, error) {
-	token, err := c.JWTManager.GenerateToken(5 * time.Minute)
+	token, err := c.JWTManager.GenerateToken(expirationTime)
 	if err != nil {
 		return nil, errors.New("error occurred while creating token")
 	}
 
-	cookie := http.Cookie{Name: types.CookieName, Value: token, Expires: time.Now().Add(5 * time.Minute), HttpOnly: true}
+	cookie := http.Cookie{Name: types.CookieName, Value: token, Expires: time.Now().Add(expirationTime), HttpOnly: true}
 
 	return &cookie, nil
 }

@@ -17,6 +17,12 @@ type Payload struct {
 	ExpiredAt time.Time `json:"expired_at"`
 }
 
+type Entry struct {
+	Domain string `json:"domain"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 func (payload *Payload) Valid() error {
 	if time.Now().After(payload.ExpiredAt) {
 		return errors.New("token has expired")

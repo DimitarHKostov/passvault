@@ -5,10 +5,10 @@ type Operation int
 const (
 	Login Operation = iota
 	Logout
-	Upload
+	Save
 	Retrieve
 )
 
 func (o Operation) String() string {
-	return [...]string{"login", "logout", "upload", "retrieve"}[o]
+	return [...]string{"login", "logout", "save", "retrieve"}[o]
 }

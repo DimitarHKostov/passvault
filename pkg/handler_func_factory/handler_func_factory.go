@@ -26,7 +26,11 @@ func (hff *HandlerFuncFactory) Produce(op operation.Operation) func(http.Respons
 	case operation.Login:
 		return http.HandlerFunc(api.Login)
 	case operation.Logout:
-		return http.HandlerFunc(api.Logout)
+		return api.Middleware(http.HandlerFunc(api.Logout))
+	case operation.Save:
+		return api.Middleware(http.HandlerFunc(api.Save))
+	case operation.Retrieve:
+		return api.Middleware(http.HandlerFunc(api.Retrieve))
 	default:
 		return nil
 	}
