@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	expirationTime = 30 * time.Second
+	expirationTime = 30 * time.Minute
 )
 
 var (

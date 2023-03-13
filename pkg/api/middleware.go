@@ -39,6 +39,7 @@ func Middleware(next http.HandlerFunc) http.HandlerFunc {
 				}
 
 				next.ServeHTTP(w, r)
+				return
 			}
 		}
 
