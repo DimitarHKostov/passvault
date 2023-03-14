@@ -18,7 +18,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(body) == 0 {
-		log.Println("empty body")
+		log.Println(emptyBodyMessage)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -37,8 +37,6 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-
-	credentials.Password = string(hashManager.Hash(credentials.Password))
 
 	cookie, err := cookieManager.Produce(types.CookieName)
 	if err != nil {

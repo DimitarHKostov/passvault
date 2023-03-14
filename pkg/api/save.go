@@ -18,7 +18,7 @@ func Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(body) == 0 {
-		log.Println("empty body")
+		log.Println(emptyBodyMessage)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -38,7 +38,26 @@ func Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	entry.Password = string(hashManager.Hash(entry.Password))
+	found, err := databaseManager.Contains(entry.Domain)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if found {
+		w.WriteHeader(http.StatusConflict)
+		return
+	}
+
+	encryptedPassword, err := cryptManager.Encrypt(entry.Password)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	entry.Password = encryptedPassword
 
 	err = databaseManager.Save(entry)
 	if err != nil {

@@ -14,7 +14,7 @@ func Middleware(next http.HandlerFunc) http.HandlerFunc {
 		for _, cookie := range cookies {
 			if cookie != nil && cookie.Name == types.CookieName {
 				if cookie.Value == "" {
-					log.Println("empty cookie")
+					log.Println(emptyCookieValueMessage)
 					w.WriteHeader(http.StatusUnauthorized)
 					return
 				}
