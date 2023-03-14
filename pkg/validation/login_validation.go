@@ -2,6 +2,8 @@ package validation
 
 import (
 	"errors"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -9,7 +11,7 @@ const (
 )
 
 var (
-	actualPassword          = []byte{6, 45, 163, 29, 139, 144, 186, 232, 229, 145, 229, 154, 179, 49, 76, 122, 116, 55, 181, 62, 12, 220, 249, 39, 68, 205, 220, 215, 72, 152, 186, 168}
+	actualPassword          = []byte{36, 50, 97, 36, 49, 48, 36, 112, 73, 116, 72, 106, 97, 80, 57, 52, 49, 106, 57, 100, 71, 74, 87, 76, 51, 72, 109, 49, 101, 53, 57, 113, 117, 107, 107, 113, 119, 121, 86, 51, 52, 112, 117, 72, 121, 51, 100, 50, 113, 83, 82, 119, 86, 54, 80, 67, 49, 112, 115, 79}
 	invalidCredentialsError = errors.New(invalidCredentialsErrorMessage)
 )
 
@@ -18,11 +20,5 @@ type LoginValidation struct {
 }
 
 func (l *LoginValidation) Validate() error {
-	for i, e := range l.PasswordToValidate {
-		if e != actualPassword[i] {
-			return invalidCredentialsError
-		}
-	}
-
-	return nil
+	return bcrypt.CompareHashAndPassword(actualPassword, l.PasswordToValidate)
 }

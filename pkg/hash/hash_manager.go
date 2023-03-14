@@ -1,7 +1,7 @@
 package hash
 
 import (
-	"crypto/sha256"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type HashManager struct{}
@@ -19,9 +19,10 @@ func Get() *HashManager {
 }
 
 func (h *HashManager) Hash(str string) []byte {
-	newHasher := sha256.New()
-	newHasher.Write([]byte(str))
-	hashed := newHasher.Sum(nil)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(str), bcrypt.DefaultCost)
+	if err != nil {
+		panic(err)
+	}
 
-	return hashed
+	return hashedPassword
 }

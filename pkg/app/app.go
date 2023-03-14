@@ -35,12 +35,10 @@ func (a *App) registerEndpoints() {
 	handlerFuncFactory := handler_func_factory.Get()
 
 	loginHandlerFunc := handlerFuncFactory.Produce(operation.Login)
-	logoutHandlerFunc := handlerFuncFactory.Produce(operation.Logout)
 	saveHandlerFunc := handlerFuncFactory.Produce(operation.Save)
 	retrieveHandlerFunc := handlerFuncFactory.Produce(operation.Retrieve)
 
 	a.addEndpoint(a.constructPath(operation.Login), loginHandlerFunc, http.MethodPost)
-	a.addEndpoint(a.constructPath(operation.Logout), logoutHandlerFunc, http.MethodGet)
 	a.addEndpoint(a.constructPath(operation.Save), saveHandlerFunc, http.MethodPost)
 	a.addEndpoint(a.constructPath(operation.Retrieve), retrieveHandlerFunc, http.MethodGet)
 }

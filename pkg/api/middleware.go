@@ -32,12 +32,6 @@ func Middleware(next http.HandlerFunc) http.HandlerFunc {
 					return
 				}
 
-				if sessionManager.Get() != cookie.Value {
-					log.Println(err)
-					w.WriteHeader(http.StatusUnauthorized)
-					return
-				}
-
 				next.ServeHTTP(w, r)
 				return
 			}

@@ -2,9 +2,9 @@ package database
 
 const (
 	host         = "localhost"
-	port         = "5432"
-	username     = "postgres"
-	password     = "mysecretpassword"
+	port         = "3306"
+	username     = "root"
+	password     = "my-secret-password"
 	databaseName = "db"
 )
 

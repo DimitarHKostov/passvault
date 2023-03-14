@@ -6,7 +6,7 @@ import (
 	"log"
 	"passvault/pkg/types"
 
-	_ "github.com/lib/pq"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var (
@@ -18,28 +18,37 @@ type DatabaseManager struct {
 }
 
 func formatCredentials(databaseConfig DatabaseConfig) string {
-	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", databaseConfig.Host, databaseConfig.Port, databaseConfig.Username, databaseConfig.Password, databaseConfig.DatabaseName)
+	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", databaseConfig.Username, databaseConfig.Password, databaseConfig.Host, databaseConfig.Port, databaseConfig.DatabaseName)
 }
 
 func Get() *DatabaseManager {
 	if databaseManager == nil {
-		dbConnection, err := sql.Open("postgres", formatCredentials(*GetDatabaseConfig()))
+		log.Println("creds are", formatCredentials(*GetDatabaseConfig()))
+		dbConn, err := sql.Open("mysql", formatCredentials(*GetDatabaseConfig()))
 		if err != nil {
 			panic(err)
 		}
 
-		databaseManager = &DatabaseManager{dbConnection: dbConnection}
+		databaseManager = &DatabaseManager{dbConnection: dbConn}
 	}
 
 	return databaseManager
 }
 
 func (dm *DatabaseManager) Save(entry types.Entry) error {
-	query := `insert into passwords(domain, username, password) VALUES ($1, $2, $3)`
-
-	_, err := dm.dbConnection.Exec(query, entry.Domain, entry.Username, entry.Password)
+	stmt, err := dm.dbConnection.Prepare("insert into db.passwords (domain, username, password) VALUES (?, ?, ?)")
 	if err != nil {
-		log.Println("tuka?")
+		log.Println(err)
+		return err
+	}
+
+	defer stmt.Close()
+
+	log.Println("entryto e", entry)
+
+	_, err = stmt.Exec(entry.Domain, entry.Username, entry.Password)
+	if err != nil {
+		log.Println(err)
 		return err
 	}
 

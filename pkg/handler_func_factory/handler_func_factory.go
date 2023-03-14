@@ -25,8 +25,6 @@ func (hff *HandlerFuncFactory) Produce(op operation.Operation) func(http.Respons
 	switch op {
 	case operation.Login:
 		return http.HandlerFunc(api.Login)
-	case operation.Logout:
-		return api.Middleware(http.HandlerFunc(api.Logout))
 	case operation.Save:
 		return api.Middleware(http.HandlerFunc(api.Save))
 	case operation.Retrieve:

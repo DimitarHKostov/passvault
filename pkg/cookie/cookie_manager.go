@@ -30,7 +30,7 @@ func Get() *CookieManager {
 	return cookieManager
 }
 
-func (c *CookieManager) Produce(name string, credentials types.Credentials) (*http.Cookie, error) {
+func (c *CookieManager) Produce(name string) (*http.Cookie, error) {
 	token, err := c.JWTManager.GenerateToken(expirationTime)
 	if err != nil {
 		return nil, errors.New("error occurred while creating token")

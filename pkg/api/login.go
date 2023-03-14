@@ -31,22 +31,22 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashedPassword := hashManager.Hash(credentials.Password)
-	validation := validation.LoginValidation{PasswordToValidate: hashedPassword}
+	validation := validation.LoginValidation{PasswordToValidate: []byte(credentials.Password)}
 	if err := validation.Validate(); err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	cookie, err := cookieManager.Produce(types.CookieName, credentials)
+	credentials.Password = string(hashManager.Hash(credentials.Password))
+
+	cookie, err := cookieManager.Produce(types.CookieName)
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	sessionManager.Set(cookie.Value)
 	http.SetCookie(w, cookie)
 
 	w.WriteHeader(http.StatusOK)
