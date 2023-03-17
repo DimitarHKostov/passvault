@@ -1,10 +1,15 @@
-package api
+package middleware
 
 import (
 	"log"
 	"net/http"
 	"passvault/pkg/jwt"
+	"passvault/pkg/singleton"
 	"passvault/pkg/types"
+)
+
+const (
+	emptyCookieValueMessage = "cookie value not provided"
 )
 
 func Middleware(next http.HandlerFunc) http.HandlerFunc {
@@ -18,6 +23,8 @@ func Middleware(next http.HandlerFunc) http.HandlerFunc {
 					w.WriteHeader(http.StatusUnauthorized)
 					return
 				}
+
+				jwtManager := singleton.GetJwtManager()
 
 				_, err := jwtManager.VerifyToken(cookie.Value)
 				if err == jwt.InvalidTokenError || err == jwt.ExpiredTokenError {

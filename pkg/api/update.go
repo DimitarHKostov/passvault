@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"passvault/pkg/singleton"
 	"passvault/pkg/types"
 	"passvault/pkg/validation"
 )
@@ -18,7 +19,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(body) == 0 {
-		log.Println(emptyBodyMessage)
+		log.Println("empty body")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -38,6 +39,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	databaseManager := singleton.GetDatabaseManager()
+
 	found, err := databaseManager.Contains(entry.Domain)
 	if err != nil {
 		log.Println(err)
@@ -49,6 +52,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
+
+	cryptManager := singleton.GetCryptManager()
 
 	encryptedPassword, err := cryptManager.Encrypt(entry.Password)
 	if err != nil {

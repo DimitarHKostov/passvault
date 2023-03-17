@@ -3,6 +3,7 @@ package handler_func_factory
 import (
 	"net/http"
 	"passvault/pkg/api"
+	"passvault/pkg/middleware"
 	"passvault/pkg/operation"
 )
 
@@ -26,11 +27,11 @@ func (hff *HandlerFuncFactory) Produce(op operation.Operation) func(http.Respons
 	case operation.Login:
 		return http.HandlerFunc(api.Login)
 	case operation.Save:
-		return api.Middleware(http.HandlerFunc(api.Save))
+		return middleware.Middleware(http.HandlerFunc(api.Save))
 	case operation.Retrieve:
-		return api.Middleware(http.HandlerFunc(api.Retrieve))
+		return middleware.Middleware(http.HandlerFunc(api.Retrieve))
 	case operation.Update:
-		return api.Middleware(http.HandlerFunc(api.Update))
+		return middleware.Middleware(http.HandlerFunc(api.Update))
 	default:
 		return nil
 	}

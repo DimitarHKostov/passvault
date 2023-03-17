@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"passvault/pkg/singleton"
 	"passvault/pkg/types"
 	"passvault/pkg/validation"
 )
@@ -18,7 +19,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(body) == 0 {
-		log.Println(emptyBodyMessage)
+		log.Println("empty body")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -37,6 +38,8 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
+
+	cookieManager := singleton.GetCookieManager()
 
 	cookie, err := cookieManager.Produce(types.CookieName)
 	if err != nil {

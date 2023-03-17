@@ -2,10 +2,10 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"passvault/pkg/singleton"
 	"passvault/pkg/types"
 	"passvault/pkg/validation"
 )
@@ -19,7 +19,7 @@ func Retrieve(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(body) == 0 {
-		log.Println(emptyBodyMessage)
+		log.Println("empty body")
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -38,6 +38,8 @@ func Retrieve(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+
+	databaseManager := singleton.GetDatabaseManager()
 
 	found, err := databaseManager.Contains(entry.Domain)
 	if err != nil {
@@ -58,6 +60,8 @@ func Retrieve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	cryptManager := singleton.GetCryptManager()
+
 	decryptedPassword, err := cryptManager.Decrypt(queriedEntry.Password)
 	if err != nil {
 		log.Println(err)
@@ -69,7 +73,7 @@ func Retrieve(w http.ResponseWriter, r *http.Request) {
 
 	jsonBytes, err := json.Marshal(&queriedEntry)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return
 	}
 
