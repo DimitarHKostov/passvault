@@ -13,17 +13,22 @@ var (
 	databaseManager *DatabaseManager
 )
 
+const (
+	mysqlDriverName             = "mysql"
+	mysqlDriverConnectionString = "%s:%s@tcp(%s:%s)/%s"
+)
+
 type DatabaseManager struct {
 	dbConnection *sql.DB
 }
 
 func formatCredentials(databaseConfig DatabaseConfig) string {
-	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", databaseConfig.Username, databaseConfig.Password, databaseConfig.Host, databaseConfig.Port, databaseConfig.DatabaseName)
+	return fmt.Sprintf(mysqlDriverConnectionString, databaseConfig.Username, databaseConfig.Password, databaseConfig.Host, databaseConfig.Port, databaseConfig.DatabaseName)
 }
 
 func Get() *DatabaseManager {
 	if databaseManager == nil {
-		dbConn, err := sql.Open("mysql", formatCredentials(*GetDatabaseConfig()))
+		dbConn, err := sql.Open(mysqlDriverName, formatCredentials(*GetDatabaseConfig()))
 		if err != nil {
 			panic(err)
 		}
@@ -59,7 +64,7 @@ func (dm *DatabaseManager) Get(domain string) (*types.Entry, error) {
 	defer stmt.Close()
 
 	var entry types.Entry
-
+	
 	row := stmt.QueryRow(domain)
 
 	err = row.Scan(&entry.Domain, &entry.Username, &entry.Password)
@@ -81,6 +86,7 @@ func (dm *DatabaseManager) Contains(domain string) (bool, error) {
 	defer stmt.Close()
 
 	var count int
+
 	err = stmt.QueryRow(domain).Scan(&count)
 	if err != nil {
 		return false, err

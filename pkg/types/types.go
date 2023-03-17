@@ -18,7 +18,7 @@ type Payload struct {
 }
 
 type Entry struct {
-	Domain string `json:"domain"`
+	Domain   string `json:"domain"`
 	Username string `json:"username"`
 	Password string `json:"password"`
 }

@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"passvault/pkg/types"
+	"passvault/pkg/validation"
 )
 
 func Update(w http.ResponseWriter, r *http.Request) {
@@ -27,6 +28,13 @@ func Update(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	validation := validation.EntryValidation{EntryToValidate: entry}
+	if err := validation.Validate(); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 

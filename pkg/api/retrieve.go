@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"passvault/pkg/types"
+	"passvault/pkg/validation"
 )
 
 func Retrieve(w http.ResponseWriter, r *http.Request) {
@@ -28,6 +29,13 @@ func Retrieve(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	validation := validation.DomainValidation{DomainToValidate: entry.Domain}
+	if err := validation.Validate(); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
