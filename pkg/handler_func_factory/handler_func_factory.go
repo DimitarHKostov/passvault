@@ -29,6 +29,8 @@ func (hff *HandlerFuncFactory) Produce(op operation.Operation) func(http.Respons
 		return api.Middleware(http.HandlerFunc(api.Save))
 	case operation.Retrieve:
 		return api.Middleware(http.HandlerFunc(api.Retrieve))
+	case operation.Update:
+		return api.Middleware(http.HandlerFunc(api.Update))
 	default:
 		return nil
 	}

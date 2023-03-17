@@ -88,3 +88,19 @@ func (dm *DatabaseManager) Contains(domain string) (bool, error) {
 
 	return count != 0, nil
 }
+
+func (dm *DatabaseManager) Update(entry types.Entry) error {
+	stmt, err := dm.dbConnection.Prepare("update db.passwords set username = ?, password = ? where domain = ?")
+	if err != nil {
+		return err
+	}
+
+	defer stmt.Close()
+
+	_, err = stmt.Exec(entry.Username, entry.Password, entry.Domain)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

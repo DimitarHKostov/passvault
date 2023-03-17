@@ -37,10 +37,12 @@ func (a *App) registerEndpoints() {
 	loginHandlerFunc := handlerFuncFactory.Produce(operation.Login)
 	saveHandlerFunc := handlerFuncFactory.Produce(operation.Save)
 	retrieveHandlerFunc := handlerFuncFactory.Produce(operation.Retrieve)
+	updateHandlerFunc := handlerFuncFactory.Produce(operation.Update)
 
 	a.addEndpoint(a.constructPath(operation.Login), loginHandlerFunc, http.MethodPost)
 	a.addEndpoint(a.constructPath(operation.Save), saveHandlerFunc, http.MethodPost)
 	a.addEndpoint(a.constructPath(operation.Retrieve), retrieveHandlerFunc, http.MethodGet)
+	a.addEndpoint(a.constructPath(operation.Update), updateHandlerFunc, http.MethodPut)
 }
 
 func (a *App) Run() error {
