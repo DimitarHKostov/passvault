@@ -33,7 +33,7 @@ func Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	validation := validation.EntryValidation{EntryToValidate: entry, LogManager: logManager}
+	validation := validation.EntryValidation{EntryToValidate: entry}
 	if err := validation.Validate(); err != nil {
 		logManager.LogDebug(err.Error())
 		w.WriteHeader(http.StatusBadRequest)

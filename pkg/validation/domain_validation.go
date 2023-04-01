@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"passvault/pkg/log"
 )
 
 const (
@@ -14,7 +13,6 @@ const (
 
 type DomainValidation struct {
 	DomainToValidate string
-	LogManager       log.LogManagerInterface
 }
 
 func (dv *DomainValidation) Validate() error {

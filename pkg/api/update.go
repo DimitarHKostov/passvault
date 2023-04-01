@@ -33,7 +33,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	validation := validation.EntryValidation{EntryToValidate: entry, LogManager: logManager}
+	validation := validation.EntryValidation{EntryToValidate: entry}
 	if err := validation.Validate(); err != nil {
 		logManager.LogError(err.Error())
 		w.WriteHeader(http.StatusBadRequest)

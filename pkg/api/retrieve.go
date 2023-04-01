@@ -33,7 +33,7 @@ func Retrieve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	validation := validation.DomainValidation{DomainToValidate: entry.Domain, LogManager: logManager}
+	validation := validation.DomainValidation{DomainToValidate: entry.Domain}
 	if err := validation.Validate(); err != nil {
 		logManager.LogDebug(err.Error())
 		w.WriteHeader(http.StatusBadRequest)

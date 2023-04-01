@@ -33,7 +33,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	validation := validation.LoginValidation{PasswordToValidate: []byte(credentials.Password), LogManager: logManager}
+	validation := validation.LoginValidation{PasswordToValidate: []byte(credentials.Password)}
 	if err := validation.Validate(); err != nil {
 		logManager.LogDebug(err.Error())
 		w.WriteHeader(http.StatusUnauthorized)
