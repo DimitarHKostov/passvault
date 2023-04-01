@@ -33,7 +33,8 @@ func Get() *CookieManager {
 func (c *CookieManager) Produce(name string) (*http.Cookie, error) {
 	token, err := c.JWTManager.GenerateToken(expirationTime)
 	if err != nil {
-		return nil, errors.New("error occurred while creating token")
+		errorMessage := "error occurred while creating token"
+		return nil, errors.New(errorMessage)
 	}
 
 	cookie := http.Cookie{Name: types.CookieName, Value: token, Expires: time.Now().Add(expirationTime), HttpOnly: true}

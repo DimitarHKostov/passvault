@@ -11,8 +11,7 @@ var (
 	cryptManager *CryptManager
 )
 
-type CryptManager struct {
-}
+type CryptManager struct{}
 
 func Get() *CryptManager {
 	if cryptManager == nil {

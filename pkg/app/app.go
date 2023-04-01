@@ -9,19 +9,23 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type App struct {
-	AppRouter *mux.Router
-	AppConfig AppConfig
-}
+const (
+	basePathTemplate = "/api/%s"
+)
 
 var (
 	basePath *string
 )
 
+type App struct {
+	AppRouter *mux.Router
+	AppConfig AppConfig
+}
+
 func (a *App) constructPath(operation operation.Operation) string {
 	if basePath == nil {
 		basePath = new(string)
-		*basePath = fmt.Sprintf("/api/%s", a.AppConfig.AppVersion)
+		*basePath = fmt.Sprintf(basePathTemplate, a.AppConfig.AppVersion)
 	}
 
 	return *basePath + fmt.Sprintf("/%s", operation.String())

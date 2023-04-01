@@ -40,7 +40,9 @@ func Get() *DatabaseManager {
 }
 
 func (dm *DatabaseManager) Save(entry types.Entry) error {
-	stmt, err := dm.dbConnection.Prepare("insert into db.passwords (domain, username, password) VALUES (?, ?, ?)")
+	query := "insert into db.passwords (domain, username, password) VALUES (?, ?, ?)"
+
+	stmt, err := dm.dbConnection.Prepare(query)
 	if err != nil {
 		return err
 	}
@@ -56,7 +58,9 @@ func (dm *DatabaseManager) Save(entry types.Entry) error {
 }
 
 func (dm *DatabaseManager) Get(domain string) (*types.Entry, error) {
-	stmt, err := dm.dbConnection.Prepare("SELECT * FROM passwords WHERE domain = ?")
+	query := "SELECT * FROM passwords WHERE domain = ?"
+	
+	stmt, err := dm.dbConnection.Prepare(query)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -64,7 +68,7 @@ func (dm *DatabaseManager) Get(domain string) (*types.Entry, error) {
 	defer stmt.Close()
 
 	var entry types.Entry
-	
+
 	row := stmt.QueryRow(domain)
 
 	err = row.Scan(&entry.Domain, &entry.Username, &entry.Password)
@@ -96,7 +100,9 @@ func (dm *DatabaseManager) Contains(domain string) (bool, error) {
 }
 
 func (dm *DatabaseManager) Update(entry types.Entry) error {
-	stmt, err := dm.dbConnection.Prepare("update db.passwords set username = ?, password = ? where domain = ?")
+	query := "update db.passwords set username = ?, password = ? where domain = ?"
+
+	stmt, err := dm.dbConnection.Prepare(query)
 	if err != nil {
 		return err
 	}
