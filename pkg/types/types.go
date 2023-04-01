@@ -7,6 +7,11 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	CookieName       = "passvault-cookie"
+	EmptyBodyMessage = "empty body"
+)
+
 type Credentials struct {
 	Password string `json:"password"`
 }
@@ -29,5 +34,3 @@ func (payload *Payload) Valid() error {
 	}
 	return nil
 }
-
-const CookieName = "passvault-cookie"

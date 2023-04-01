@@ -19,7 +19,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(body) == 0 {
-		log.Println("empty body")
+		log.Println(types.EmptyBodyMessage)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
