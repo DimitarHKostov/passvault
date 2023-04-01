@@ -42,7 +42,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	cookieManager := singleton.GetCookieManager()
 
-	cookie, err := cookieManager.Produce(types.CookieName)
+	cookie, err := cookieManager.ProduceCookie()
 	if err != nil {
 		logManager.Logger.Debug(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)

@@ -9,19 +9,19 @@ import (
 	"passvault/pkg/log"
 )
 
-func GetCookieManager() *cookie.CookieManager {
+func GetCookieManager() cookie.CookieManagerInterface {
 	return cookie.Get()
 }
 
-func GetJwtManager() *jwt.JWTManager {
+func GetJwtManager() jwt.JWTManagerInterface {
 	return jwt.Get()
 }
 
-func GetDatabaseManager() *database.DatabaseManager {
+func GetDatabaseManager() database.DatabaseManagerInterface {
 	return database.Get()
 }
 
-func GetCryptManager() *crypt.CryptManager {
+func GetCryptManager() crypt.CryptManagerInterface {
 	return crypt.Get()
 }
 
@@ -29,6 +29,6 @@ func GetLogManager() *log.LogManager {
 	return log.Get()
 }
 
-func GetPayloadGenerator() *generator.PayloadGenerator {
+func GetPayloadGenerator() generator.PayloadGeneratorInterface {
 	return generator.Get()
 }

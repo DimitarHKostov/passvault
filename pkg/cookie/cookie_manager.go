@@ -33,7 +33,7 @@ func Get() *CookieManager {
 	return cookieManager
 }
 
-func (c *CookieManager) Produce(name string) (*http.Cookie, error) {
+func (c *CookieManager) ProduceCookie() (*http.Cookie, error) {
 	token, err := c.JWTManager.GenerateToken(expirationTime)
 	if err != nil {
 		//todo log
