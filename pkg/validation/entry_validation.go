@@ -8,10 +8,10 @@ import (
 
 const (
 	argumentsNotSufficientErrorMessage = "args not sufficient"
-	minPasswordSize                    = 8
-	minPasswordSizeErrorMessage        = "password too short, must be at least 8 characters"
+	minSize                            = 8
+	minSizeErrorMessage                = "input too short, must be at least 8 characters"
 	forbiddenCharacters                = "\"'`;"
-	forbiddenCharactersErrorMessage    = "password contains forbidden character"
+	forbiddenCharactersErrorMessage    = "input contains forbidden character"
 )
 
 var (
@@ -48,8 +48,8 @@ func (ev *EntryValidation) validateUsername(username string) error {
 }
 
 func (ev *EntryValidation) genericValidation(str string) error {
-	if len(str) < minPasswordSize {
-		return errors.New(minPasswordSizeErrorMessage)
+	if len(str) < minSize {
+		return errors.New(minSizeErrorMessage)
 	}
 
 	if strings.ContainsAny(str, forbiddenCharacters) {
