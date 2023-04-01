@@ -7,7 +7,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func main() {
+func run() {
 	app := app.App{
 		AppRouter:  mux.NewRouter(),
 		AppConfig:  *app.GetAppConfig(),
@@ -17,4 +17,8 @@ func main() {
 	if err := app.Run(); err != nil {
 		panic(err)
 	}
+}
+
+func main() {
+	run()
 }
