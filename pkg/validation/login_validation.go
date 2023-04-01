@@ -12,7 +12,7 @@ var (
 
 type LoginValidation struct {
 	PasswordToValidate []byte
-	LogManager         *log.LogManager
+	LogManager         log.LogManagerInterface
 }
 
 func (lv *LoginValidation) Validate() error {

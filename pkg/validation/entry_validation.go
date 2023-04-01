@@ -22,7 +22,7 @@ var (
 
 type EntryValidation struct {
 	EntryToValidate types.Entry
-	LogManager      *log.LogManager
+	LogManager      log.LogManagerInterface
 }
 
 func (ev *EntryValidation) Validate() error {

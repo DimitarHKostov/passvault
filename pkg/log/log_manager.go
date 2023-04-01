@@ -7,14 +7,34 @@ var (
 )
 
 type LogManager struct {
-	Logger *zap.Logger
+	logger *zap.Logger
 }
 
 func Get() *LogManager {
 	if logManager == nil {
 		logger, _ := zap.NewProduction()
-		logManager = &LogManager{Logger: logger}
+		logManager = &LogManager{logger: logger}
 	}
 
 	return logManager
+}
+
+func (lm *LogManager) LogInfo(message string) {
+	lm.logger.Info(message)
+}
+
+func (lm *LogManager) LogError(message string) {
+	lm.logger.Error(message)
+}
+
+func (lm *LogManager) LogDebug(message string) {
+	lm.logger.Debug(message)
+}
+
+func (lm *LogManager) LogFatal(message string) {
+	lm.logger.Fatal(message)
+}
+
+func (lm *LogManager) LogPanic(message string) {
+	lm.logger.Panic(message)
 }

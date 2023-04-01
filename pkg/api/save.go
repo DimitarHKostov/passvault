@@ -14,13 +14,13 @@ func Save(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		logManager.Logger.Error(err.Error())
+		logManager.LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if len(body) == 0 {
-		logManager.Logger.Debug(types.EmptyBodyMessage)
+		logManager.LogDebug(types.EmptyBodyMessage)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -28,14 +28,14 @@ func Save(w http.ResponseWriter, r *http.Request) {
 	var entry types.Entry
 	err = json.Unmarshal(body, &entry)
 	if err != nil {
-		logManager.Logger.Error(err.Error())
+		logManager.LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	validation := validation.EntryValidation{EntryToValidate: entry, LogManager: logManager}
 	if err := validation.Validate(); err != nil {
-		logManager.Logger.Debug(err.Error())
+		logManager.LogDebug(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -44,7 +44,7 @@ func Save(w http.ResponseWriter, r *http.Request) {
 
 	found, err := databaseManager.Contains(entry.Domain)
 	if err != nil {
-		logManager.Logger.Error(err.Error())
+		logManager.LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -59,7 +59,7 @@ func Save(w http.ResponseWriter, r *http.Request) {
 
 	encryptedPassword, err := cryptManager.Encrypt(entry.Password)
 	if err != nil {
-		logManager.Logger.Error(err.Error())
+		logManager.LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -68,7 +68,7 @@ func Save(w http.ResponseWriter, r *http.Request) {
 
 	err = databaseManager.Save(entry)
 	if err != nil {
-		logManager.Logger.Error(err.Error())
+		logManager.LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

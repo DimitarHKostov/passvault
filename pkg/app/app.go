@@ -21,7 +21,7 @@ var (
 type App struct {
 	AppRouter  *mux.Router
 	AppConfig  AppConfig
-	LogManager *log.LogManager
+	LogManager log.LogManagerInterface
 }
 
 func (a *App) constructPath(operation operation.Operation) string {

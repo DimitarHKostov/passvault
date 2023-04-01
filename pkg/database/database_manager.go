@@ -21,7 +21,7 @@ var (
 
 type DatabaseManager struct {
 	dbConnection *sql.DB
-	LogManager   *log.LogManager
+	LogManager   log.LogManagerInterface
 }
 
 func Get() *DatabaseManager {

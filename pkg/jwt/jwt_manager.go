@@ -27,7 +27,7 @@ var (
 type JWTManager struct {
 	PayloadGenerator generator.PayloadGeneratorInterface
 	SecretKey        string
-	LogManager       *log.LogManager
+	LogManager       log.LogManagerInterface
 }
 
 func Get() *JWTManager {

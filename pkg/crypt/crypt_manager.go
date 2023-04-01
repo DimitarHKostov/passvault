@@ -13,7 +13,7 @@ var (
 )
 
 type CryptManager struct {
-	LogManager *log.LogManager
+	LogManager log.LogManagerInterface
 }
 
 func Get() *CryptManager {

@@ -13,7 +13,7 @@ var (
 )
 
 type PayloadGenerator struct {
-	LogManager *log.LogManager
+	LogManager log.LogManagerInterface
 }
 
 func Get() *PayloadGenerator {

@@ -19,7 +19,7 @@ var (
 
 type CookieManager struct {
 	JWTManager *jwt.JWTManager
-	LogManager *log.LogManager
+	LogManager log.LogManagerInterface
 }
 
 func Get() *CookieManager {

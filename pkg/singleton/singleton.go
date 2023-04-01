@@ -25,7 +25,7 @@ func GetCryptManager() crypt.CryptManagerInterface {
 	return crypt.Get()
 }
 
-func GetLogManager() *log.LogManager {
+func GetLogManager() log.LogManagerInterface {
 	return log.Get()
 }
 

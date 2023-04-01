@@ -14,13 +14,13 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		logManager.Logger.Error(err.Error())
+		logManager.LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if len(body) == 0 {
-		logManager.Logger.Debug(types.EmptyBodyMessage)
+		logManager.LogDebug(types.EmptyBodyMessage)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -28,14 +28,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	var credentials types.Credentials
 	err = json.Unmarshal(body, &credentials)
 	if err != nil {
-		logManager.Logger.Error(err.Error())
+		logManager.LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	validation := validation.LoginValidation{PasswordToValidate: []byte(credentials.Password), LogManager: logManager}
 	if err := validation.Validate(); err != nil {
-		logManager.Logger.Debug(err.Error())
+		logManager.LogDebug(err.Error())
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -44,7 +44,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	cookie, err := cookieManager.ProduceCookie()
 	if err != nil {
-		logManager.Logger.Debug(err.Error())
+		logManager.LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

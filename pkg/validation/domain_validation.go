@@ -14,7 +14,7 @@ const (
 
 type DomainValidation struct {
 	DomainToValidate string
-	LogManager       *log.LogManager
+	LogManager       log.LogManagerInterface
 }
 
 func (dv *DomainValidation) Validate() error {

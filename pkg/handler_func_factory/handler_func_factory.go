@@ -17,7 +17,7 @@ var (
 )
 
 type HandlerFuncFactory struct {
-	LogManager *log.LogManager
+	LogManager log.LogManagerInterface
 }
 
 func Get() *HandlerFuncFactory {
