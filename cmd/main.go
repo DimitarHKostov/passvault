@@ -2,14 +2,16 @@ package main
 
 import (
 	"passvault/pkg/app"
+	"passvault/pkg/singleton"
 
 	"github.com/gorilla/mux"
 )
 
 func main() {
 	app := app.App{
-		AppRouter: mux.NewRouter(),
-		AppConfig: *app.GetAppConfig(),
+		AppRouter:  mux.NewRouter(),
+		AppConfig:  *app.GetAppConfig(),
+		LogManager: singleton.GetLogManager(),
 	}
 
 	if err := app.Run(); err != nil {
