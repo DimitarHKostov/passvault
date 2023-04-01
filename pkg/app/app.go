@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"passvault/pkg/handler_func_factory"
+	"passvault/pkg/log"
 	"passvault/pkg/operation"
 
 	"github.com/gorilla/mux"
@@ -18,8 +19,9 @@ var (
 )
 
 type App struct {
-	AppRouter *mux.Router
-	AppConfig AppConfig
+	AppRouter  *mux.Router
+	AppConfig  AppConfig
+	LogManager *log.LogManager
 }
 
 func (a *App) constructPath(operation operation.Operation) string {
@@ -51,6 +53,8 @@ func (a *App) registerEndpoints() {
 
 func (a *App) Run() error {
 	a.registerEndpoints()
+
+	//todo log
 
 	return http.ListenAndServe(a.AppConfig.AppPort, a.AppRouter)
 }

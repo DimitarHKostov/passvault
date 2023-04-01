@@ -1,9 +1,9 @@
 package handler_func_factory
 
 import (
-	"log"
 	"net/http"
 	"passvault/pkg/api"
+	"passvault/pkg/log"
 	"passvault/pkg/middleware"
 	"passvault/pkg/operation"
 )
@@ -16,11 +16,15 @@ var (
 	handlerFuncFactory *HandlerFuncFactory
 )
 
-type HandlerFuncFactory struct{}
+type HandlerFuncFactory struct {
+	LogManager *log.LogManager
+}
 
 func Get() *HandlerFuncFactory {
 	if handlerFuncFactory == nil {
-		handlerFuncFactory = &HandlerFuncFactory{}
+		handlerFuncFactory = &HandlerFuncFactory{
+			LogManager: log.Get(),
+		}
 	}
 
 	return handlerFuncFactory
@@ -37,7 +41,8 @@ func (hff *HandlerFuncFactory) Produce(op operation.Operation) func(http.Respons
 	case operation.Update:
 		return middleware.Middleware(http.HandlerFunc(api.Update))
 	default:
-		log.Println(invalidOperationMessage)
+		//todo log
+		//log.Println(invalidOperationMessage)
 		return nil
 	}
 }

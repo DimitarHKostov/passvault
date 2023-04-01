@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"passvault/pkg/singleton"
 	"passvault/pkg/types"
@@ -11,15 +10,17 @@ import (
 )
 
 func Save(w http.ResponseWriter, r *http.Request) {
+	logManager := singleton.GetLogManager()
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Println(err)
+		logManager.Logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if len(body) == 0 {
-		log.Println(types.EmptyBodyMessage)
+		logManager.Logger.Debug(types.EmptyBodyMessage)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -27,14 +28,14 @@ func Save(w http.ResponseWriter, r *http.Request) {
 	var entry types.Entry
 	err = json.Unmarshal(body, &entry)
 	if err != nil {
-		log.Println(err)
+		logManager.Logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	validation := validation.EntryValidation{EntryToValidate: entry}
+	validation := validation.EntryValidation{EntryToValidate: entry, LogManager: logManager}
 	if err := validation.Validate(); err != nil {
-		log.Println(err)
+		logManager.Logger.Debug(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -43,12 +44,13 @@ func Save(w http.ResponseWriter, r *http.Request) {
 
 	found, err := databaseManager.Contains(entry.Domain)
 	if err != nil {
-		log.Println(err)
+		logManager.Logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if found {
+		//todo log
 		w.WriteHeader(http.StatusConflict)
 		return
 	}
@@ -57,7 +59,7 @@ func Save(w http.ResponseWriter, r *http.Request) {
 
 	encryptedPassword, err := cryptManager.Encrypt(entry.Password)
 	if err != nil {
-		log.Println(err)
+		logManager.Logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -66,7 +68,7 @@ func Save(w http.ResponseWriter, r *http.Request) {
 
 	err = databaseManager.Save(entry)
 	if err != nil {
-		log.Println(err)
+		logManager.Logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

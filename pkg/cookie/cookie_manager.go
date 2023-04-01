@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"passvault/pkg/jwt"
+	"passvault/pkg/log"
 	"passvault/pkg/types"
 	"time"
 )
@@ -18,12 +19,14 @@ var (
 
 type CookieManager struct {
 	JWTManager *jwt.JWTManager
+	LogManager *log.LogManager
 }
 
 func Get() *CookieManager {
 	if cookieManager == nil {
 		cookieManager = &CookieManager{
 			JWTManager: jwt.Get(),
+			LogManager: log.Get(),
 		}
 	}
 
@@ -33,10 +36,12 @@ func Get() *CookieManager {
 func (c *CookieManager) Produce(name string) (*http.Cookie, error) {
 	token, err := c.JWTManager.GenerateToken(expirationTime)
 	if err != nil {
+		//todo log
 		errorMessage := "error occurred while creating token"
 		return nil, errors.New(errorMessage)
 	}
 
+	//todo log
 	cookie := http.Cookie{Name: types.CookieName, Value: token, Expires: time.Now().Add(expirationTime), HttpOnly: true}
 
 	return &cookie, nil

@@ -30,7 +30,8 @@ type Entry struct {
 
 func (payload *Payload) Valid() error {
 	if time.Now().After(payload.ExpiredAt) {
-		return errors.New("token has expired")
+		errorMessage := "token has expired"
+		return errors.New(errorMessage)
 	}
 	return nil
 }

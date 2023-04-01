@@ -1,6 +1,8 @@
 package validation
 
 import (
+	"passvault/pkg/log"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -10,6 +12,7 @@ var (
 
 type LoginValidation struct {
 	PasswordToValidate []byte
+	LogManager         *log.LogManager
 }
 
 func (lv *LoginValidation) Validate() error {

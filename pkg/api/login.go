@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"passvault/pkg/singleton"
 	"passvault/pkg/types"
@@ -11,15 +10,17 @@ import (
 )
 
 func Login(w http.ResponseWriter, r *http.Request) {
+	logManager := singleton.GetLogManager()
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Println(err)
+		logManager.Logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if len(body) == 0 {
-		log.Println(types.EmptyBodyMessage)
+		logManager.Logger.Debug(types.EmptyBodyMessage)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -27,14 +28,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	var credentials types.Credentials
 	err = json.Unmarshal(body, &credentials)
 	if err != nil {
-		log.Println(err)
+		logManager.Logger.Error(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	validation := validation.LoginValidation{PasswordToValidate: []byte(credentials.Password)}
+	validation := validation.LoginValidation{PasswordToValidate: []byte(credentials.Password), LogManager: logManager}
 	if err := validation.Validate(); err != nil {
-		log.Println(err)
+		logManager.Logger.Debug(err.Error())
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -43,7 +44,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	cookie, err := cookieManager.Produce(types.CookieName)
 	if err != nil {
-		log.Println(err)
+		logManager.Logger.Debug(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

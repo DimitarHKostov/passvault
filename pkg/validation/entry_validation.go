@@ -2,6 +2,7 @@ package validation
 
 import (
 	"errors"
+	"passvault/pkg/log"
 	"passvault/pkg/types"
 	"strings"
 )
@@ -21,6 +22,7 @@ var (
 
 type EntryValidation struct {
 	EntryToValidate types.Entry
+	LogManager      *log.LogManager
 }
 
 func (ev *EntryValidation) Validate() error {
