@@ -62,7 +62,7 @@ func Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	entry.Password = encryptedPassword
+	entry.Password = *encryptedPassword
 
 	err = databaseManager.Save(entry)
 	if err != nil {

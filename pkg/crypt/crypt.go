@@ -21,10 +21,10 @@ func Get() *CryptManager {
 	return cryptManager
 }
 
-func (cm *CryptManager) Encrypt(plaintext string) (string, error) {
+func (cm *CryptManager) Encrypt(plaintext string) (*string, error) {
 	c, err := aes.NewCipher(key)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	plaintextBytes := []byte(plaintext)
@@ -36,14 +36,16 @@ func (cm *CryptManager) Encrypt(plaintext string) (string, error) {
 
 	out := make([]byte, len(plaintextBytes))
 	c.Encrypt(out, plaintextBytes)
-	return hex.EncodeToString(out), nil
+	encToString := hex.EncodeToString(out)
+
+	return &(encToString), nil
 }
 
-func (cm *CryptManager) Decrypt(encryptedHex string) (string, error) {
+func (cm *CryptManager) Decrypt(encryptedHex string) (*string, error) {
 	ciphertext, _ := hex.DecodeString(encryptedHex)
 	c, err := aes.NewCipher(key)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	pt := make([]byte, len(ciphertext))
@@ -52,5 +54,5 @@ func (cm *CryptManager) Decrypt(encryptedHex string) (string, error) {
 	padLen := int(pt[len(pt)-1])
 	s := string(pt[:len(pt)-padLen])
 
-	return s, nil
+	return &s, nil
 }

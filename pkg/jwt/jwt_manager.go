@@ -45,6 +45,7 @@ func (jwtm *JWTManager) GenerateToken(duration time.Duration) (string, error) {
 	}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
+
 	return jwtToken.SignedString([]byte(jwtm.SecretKey))
 }
 

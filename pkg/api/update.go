@@ -62,7 +62,7 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	entry.Password = encryptedPassword
+	entry.Password = *encryptedPassword
 
 	err = databaseManager.Update(entry)
 	if err != nil {

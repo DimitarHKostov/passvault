@@ -69,7 +69,7 @@ func Retrieve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	queriedEntry.Password = decryptedPassword
+	queriedEntry.Password = *decryptedPassword
 
 	jsonBytes, err := json.Marshal(&queriedEntry)
 	if err != nil {
