@@ -34,7 +34,7 @@ func (a *App) constructPath(operation operation.Operation) string {
 }
 
 func (a *App) addEndpoint(path string, handlerFunc func(http.ResponseWriter, *http.Request), methods ...string) {
-	a.AppRouter.PathPrefix(path).HandlerFunc(handlerFunc).Methods(methods...)
+	a.AppRouter.Path(path).HandlerFunc(handlerFunc).Methods(methods...)
 }
 
 func (a *App) registerEndpoints() {
