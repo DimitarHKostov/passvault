@@ -9,7 +9,6 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.27.6
-	github.com/patrickmn/go-cache v2.1.0+incompatible
 	go.uber.org/zap v1.24.0
 	golang.org/x/crypto v0.7.0
 )
