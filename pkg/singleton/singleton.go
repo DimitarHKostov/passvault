@@ -1,7 +1,6 @@
 package singleton
 
 import (
-	"passvault/pkg/cache"
 	"passvault/pkg/cookie"
 	"passvault/pkg/crypt"
 	"passvault/pkg/database"
@@ -32,8 +31,4 @@ func GetLogManager() log.LogManagerInterface {
 
 func GetPayloadGenerator() generator.PayloadGeneratorInterface {
 	return generator.Get()
-}
-
-func GetCacheManager() cache.CacheManagerInterface {
-	return cache.Get()
 }

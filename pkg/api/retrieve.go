@@ -39,7 +39,7 @@ func Retrieve(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
+	cryptManager := singleton.GetCryptManager()
 	databaseManager := singleton.GetDatabaseManager()
 
 	found, err := databaseManager.Contains(entry.Domain)
@@ -61,8 +61,6 @@ func Retrieve(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	cryptManager := singleton.GetCryptManager()
 
 	decryptedPassword, err := cryptManager.Decrypt(queriedEntry.Password)
 	if err != nil {

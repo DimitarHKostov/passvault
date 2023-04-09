@@ -4,7 +4,7 @@ const (
 	host         = "localhost"
 	port         = "3306"
 	username     = "root"
-	password     = "my-secret-password"
+	password     = "password"
 	databaseName = "db"
 )
 

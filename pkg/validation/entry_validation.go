@@ -2,13 +2,14 @@ package validation
 
 import (
 	"errors"
+	"log"
 	"passvault/pkg/types"
 	"strings"
 )
 
 const (
 	argumentsNotSufficientErrorMessage = "args not sufficient"
-	minSize                            = 8
+	minSize                            = 6
 	minSizeErrorMessage                = "input too short, must be at least 8 characters"
 	forbiddenCharacters                = "\"'`;"
 	forbiddenCharactersErrorMessage    = "input contains forbidden character"
@@ -40,10 +41,12 @@ func (ev *EntryValidation) Validate() error {
 }
 
 func (ev *EntryValidation) validatePassword(password string) error {
+	log.Println("gurmi tuka apss")
 	return ev.genericValidation(password)
 }
 
 func (ev *EntryValidation) validateUsername(username string) error {
+	log.Println("gurmi tuka user")
 	return ev.genericValidation(username)
 }
 
