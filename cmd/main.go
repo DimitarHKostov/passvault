@@ -15,6 +15,7 @@ func run() {
 	}
 
 	if err := app.Run(); err != nil {
+		//todo log
 		panic(err)
 	}
 }
