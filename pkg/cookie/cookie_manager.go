@@ -42,7 +42,7 @@ func (c *CookieManager) ProduceCookie() (*http.Cookie, error) {
 	}
 
 	//todo log
-	cookie := http.Cookie{Name: types.CookieName, Value: token, Expires: time.Now().Add(expirationTime), HttpOnly: true}
+	cookie := http.Cookie{Name: types.CookieName, Value: token, Expires: time.Now().Add(expirationTime), HttpOnly: types.CookieHttpOnly}
 
 	return &cookie, nil
 }

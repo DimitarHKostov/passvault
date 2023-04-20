@@ -10,6 +10,7 @@ import (
 const (
 	CookieName       = "passvault-cookie"
 	EmptyBodyMessage = "empty body"
+	CookieHttpOnly   = true
 )
 
 type Credentials struct {
