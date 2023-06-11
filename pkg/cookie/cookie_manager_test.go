@@ -48,7 +48,7 @@ var _ = Describe("Shopping cart", func() {
 	})
 
 	Context("ProduceCookie", func() {
-		It("should succeed", func() {
+		It("should succeed to create a new cookie", func() {
 			expectedCookie := produceMockCookie(types.CookieName, tokenValue, expirationTime, types.CookieHttpOnly)
 			jwtManagerMock.EXPECT().GenerateToken(expirationTime).Return(tokenValue, nil)
 			actualCookie, err := cookieManager.ProduceCookie()
@@ -59,7 +59,7 @@ var _ = Describe("Shopping cart", func() {
 			Expect(actualCookie.HttpOnly).To(Equal(expectedCookie.HttpOnly))
 		})
 
-		It("should fail", func() {
+		It("should fail to create a cookie when jwt manager returns error", func() {
 			expectedError := errors.New(errorMessage)
 			jwtManagerMock.EXPECT().GenerateToken(expirationTime).Return("", expectedError)
 			actualCookie, err := cookieManager.ProduceCookie()
