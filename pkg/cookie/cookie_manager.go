@@ -18,15 +18,15 @@ var (
 )
 
 type CookieManager struct {
-	JWTManager *jwt.JWTManager
-	LogManager log.LogManagerInterface
+	jwtManager jwt.JWTManagerInterface
+	logManager log.LogManagerInterface
 }
 
-func Get() *CookieManager {
+func NewCookieManager(jwtManager jwt.JWTManagerInterface, logManager log.LogManagerInterface) *CookieManager {
 	if cookieManager == nil {
 		cookieManager = &CookieManager{
-			JWTManager: jwt.Get(),
-			LogManager: log.Get(),
+			jwtManager: jwtManager,
+			logManager: logManager,
 		}
 	}
 
@@ -34,7 +34,7 @@ func Get() *CookieManager {
 }
 
 func (c *CookieManager) ProduceCookie() (*http.Cookie, error) {
-	token, err := c.JWTManager.GenerateToken(expirationTime)
+	token, err := c.jwtManager.GenerateToken(expirationTime)
 	if err != nil {
 		//todo log
 		errorMessage := "error occurred while creating token"

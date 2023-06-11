@@ -21,10 +21,10 @@ var (
 
 type DatabaseManager struct {
 	dbConnection *sql.DB
-	LogManager   log.LogManagerInterface
+	logManager   log.LogManagerInterface
 }
 
-func Get() *DatabaseManager {
+func NewDatabaseManager(logManager log.LogManagerInterface) *DatabaseManager {
 	if databaseManager == nil {
 		dbConn, err := sql.Open(mysqlDriverName, formatCredentials(*GetDatabaseConfig()))
 		if err != nil {
@@ -32,7 +32,7 @@ func Get() *DatabaseManager {
 			panic(err)
 		}
 
-		databaseManager = &DatabaseManager{dbConnection: dbConn, LogManager: log.Get()}
+		databaseManager = &DatabaseManager{dbConnection: dbConn, logManager: logManager}
 	}
 
 	return databaseManager

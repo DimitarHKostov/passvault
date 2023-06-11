@@ -7,13 +7,13 @@ const (
 )
 
 type AppConfig struct {
-	AppName    string
-	AppVersion string
-	AppPort    string
+	appName    string
+	appVersion string
+	appPort    string
 }
 
-func GetAppConfig() *AppConfig {
-	appConfig := &AppConfig{AppName: appName, AppVersion: appVersion, AppPort: appPort}
+func NewAppConfig() *AppConfig {
+	appConfig := &AppConfig{appName: appName, appVersion: appVersion, appPort: appPort}
 
 	return appConfig
 }

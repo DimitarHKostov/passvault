@@ -36,3 +36,7 @@ func (payload *Payload) Valid() error {
 	}
 	return nil
 }
+
+type Environment struct {
+	SecretKey string
+}

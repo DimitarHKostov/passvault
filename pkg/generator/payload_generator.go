@@ -13,12 +13,12 @@ var (
 )
 
 type PayloadGenerator struct {
-	LogManager log.LogManagerInterface
+	logManager log.LogManagerInterface
 }
 
-func Get() *PayloadGenerator {
+func NewPayloadGenerator(logManager log.LogManagerInterface) *PayloadGenerator {
 	if payloadGenerator == nil {
-		payloadGenerator = &PayloadGenerator{LogManager: log.Get()}
+		payloadGenerator = &PayloadGenerator{logManager: logManager}
 	}
 
 	return payloadGenerator

@@ -13,13 +13,13 @@ var (
 )
 
 type CryptManager struct {
-	LogManager log.LogManagerInterface
+	logManager log.LogManagerInterface
 }
 
-func Get() *CryptManager {
+func NewCryptManager(logManager log.LogManagerInterface) *CryptManager {
 	if cryptManager == nil {
 		cryptManager = &CryptManager{
-			LogManager: log.Get(),
+			logManager: logManager,
 		}
 	}
 

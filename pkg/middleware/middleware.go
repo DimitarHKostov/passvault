@@ -13,7 +13,7 @@ const (
 	emptyCookieValueMessage = "cookie value not provided"
 )
 
-func Middleware(next http.HandlerFunc) http.HandlerFunc {
+func Middleware(next http.HandlerFunc, secretKey string) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//logManager := log.Get()
 		cookies := r.Cookies()
@@ -27,7 +27,7 @@ func Middleware(next http.HandlerFunc) http.HandlerFunc {
 					return
 				}
 
-				jwtManager := singleton.GetJwtManager()
+				jwtManager := singleton.GetJwtManager(secretKey)
 
 				_, err := jwtManager.VerifyToken(cookie.Value)
 				if err == jwt.InvalidTokenError || err == jwt.ExpiredTokenError {

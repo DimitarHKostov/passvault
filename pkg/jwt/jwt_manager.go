@@ -12,10 +12,8 @@ import (
 )
 
 const (
-	minSecretKeySize         = 32
 	invalidTokenErrorMessage = "token is invalid"
 	expiredTokenErrorMessage = "token has expired"
-	secretKey                = "asdasasdasasdasasdasasdasaa"
 )
 
 var (
@@ -25,17 +23,17 @@ var (
 )
 
 type JWTManager struct {
-	PayloadGenerator generator.PayloadGeneratorInterface
-	SecretKey        string
-	LogManager       log.LogManagerInterface
+	payloadGenerator generator.PayloadGeneratorInterface
+	secretKey        string
+	logManager       log.LogManagerInterface
 }
 
-func Get() *JWTManager {
+func NewJwtManager(payloadGenerator generator.PayloadGeneratorInterface, secretKey string, logManager log.LogManagerInterface) *JWTManager {
 	if jwtManager == nil {
 		jwtManager = &JWTManager{
-			PayloadGenerator: generator.Get(),
-			SecretKey:        secretKey,
-			LogManager:       log.Get(),
+			payloadGenerator: payloadGenerator,
+			secretKey:        secretKey,
+			logManager:       logManager,
 		}
 	}
 
@@ -43,7 +41,7 @@ func Get() *JWTManager {
 }
 
 func (jwtm *JWTManager) GenerateToken(duration time.Duration) (string, error) {
-	payload, err := jwtm.PayloadGenerator.GeneratePayload(duration)
+	payload, err := jwtm.payloadGenerator.GeneratePayload(duration)
 	if err != nil {
 		//todo log
 		return "", err
@@ -52,7 +50,7 @@ func (jwtm *JWTManager) GenerateToken(duration time.Duration) (string, error) {
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
 
 	//todo log
-	return jwtToken.SignedString([]byte(jwtm.SecretKey))
+	return jwtToken.SignedString([]byte(jwtm.secretKey))
 }
 
 func (jwtm *JWTManager) VerifyToken(token string) (*types.Payload, error) {
@@ -63,7 +61,7 @@ func (jwtm *JWTManager) VerifyToken(token string) (*types.Payload, error) {
 			return nil, InvalidTokenError
 		}
 		//todo log
-		return []byte(jwtm.SecretKey), nil
+		return []byte(jwtm.secretKey), nil
 	}
 
 	jwtToken, err := jwt.ParseWithClaims(token, &types.Payload{}, keyFunc)

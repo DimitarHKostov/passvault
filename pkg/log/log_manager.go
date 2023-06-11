@@ -10,7 +10,7 @@ type LogManager struct {
 	logger *zap.Logger
 }
 
-func Get() *LogManager {
+func NewLogManager() *LogManager {
 	if logManager == nil {
 		logger, _ := zap.NewProduction()
 		logManager = &LogManager{logger: logger}
