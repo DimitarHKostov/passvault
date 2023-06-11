@@ -13,21 +13,15 @@ const (
 	expirationTime = 10 * time.Minute
 )
 
-var (
-	cookieManager *CookieManager
-)
-
 type CookieManager struct {
 	jwtManager jwt.JWTManagerInterface
 	logManager log.LogManagerInterface
 }
 
 func NewCookieManager(jwtManager jwt.JWTManagerInterface, logManager log.LogManagerInterface) *CookieManager {
-	if cookieManager == nil {
-		cookieManager = &CookieManager{
-			jwtManager: jwtManager,
-			logManager: logManager,
-		}
+	cookieManager := &CookieManager{
+		jwtManager: jwtManager,
+		logManager: logManager,
 	}
 
 	return cookieManager

@@ -7,27 +7,22 @@ import (
 	"passvault/pkg/log"
 )
 
-var (
-	key          = []byte("this is secret key enough 32 bit")
-	cryptManager *CryptManager
-)
-
 type CryptManager struct {
 	logManager log.LogManagerInterface
+	key        []byte
 }
 
-func NewCryptManager(logManager log.LogManagerInterface) *CryptManager {
-	if cryptManager == nil {
-		cryptManager = &CryptManager{
-			logManager: logManager,
-		}
+func NewCryptManager(logManager log.LogManagerInterface, key []byte) *CryptManager {
+	cryptManager := &CryptManager{
+		logManager: logManager,
+		key:        key,
 	}
 
 	return cryptManager
 }
 
 func (cm *CryptManager) Encrypt(plaintext string) (*string, error) {
-	c, err := aes.NewCipher(key)
+	c, err := aes.NewCipher(cm.key)
 	if err != nil {
 		//todo log
 		return nil, err
@@ -50,7 +45,7 @@ func (cm *CryptManager) Encrypt(plaintext string) (*string, error) {
 
 func (cm *CryptManager) Decrypt(encryptedHex string) (*string, error) {
 	ciphertext, _ := hex.DecodeString(encryptedHex)
-	c, err := aes.NewCipher(key)
+	c, err := aes.NewCipher(cm.key)
 	if err != nil {
 		//todo log
 		return nil, err

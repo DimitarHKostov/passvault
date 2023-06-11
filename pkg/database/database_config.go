@@ -1,34 +1,20 @@
 package database
 
-const (
-	host         = "localhost"
-	port         = "3306"
-	username     = "root"
-	password     = "password"
-	databaseName = "db"
-)
-
-var (
-	databaseConfig *DatabaseConfig
-)
-
 type DatabaseConfig struct {
-	Host         string
-	Port         string
-	Username     string
-	Password     string
-	DatabaseName string
+	host         string
+	port         string
+	username     string
+	password     string
+	databaseName string
 }
 
-func GetDatabaseConfig() *DatabaseConfig {
-	if databaseConfig == nil {
-		databaseConfig = &DatabaseConfig{
-			Host:         host,
-			Port:         port,
-			Username:     username,
-			Password:     password,
-			DatabaseName: databaseName,
-		}
+func NewDatabaseConfig(host, port, username, password, databaseName string) *DatabaseConfig {
+	databaseConfig := &DatabaseConfig{
+		host:         host,
+		port:         port,
+		username:     username,
+		password:     password,
+		databaseName: databaseName,
 	}
 
 	return databaseConfig

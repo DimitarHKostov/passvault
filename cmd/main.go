@@ -19,6 +19,12 @@ func main() {
 
 func getEnvironmentVariables() types.Environment {
 	return types.Environment{
-		SecretKey: "asdasasdasasdasasdasasdasaa",
+		JWTSecretKey:     "asdasasdasasdasasdasasdasaa",
+		CrypterSecretKey: "this is secret key enough 32 bit",
+		Host:             "localhost",
+		Port:             "3306",
+		Username:         "root",
+		Password:         "password",
+		DatabaseName:     "db",
 	}
 }

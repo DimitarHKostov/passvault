@@ -8,18 +8,12 @@ import (
 	"github.com/google/uuid"
 )
 
-var (
-	payloadGenerator *PayloadGenerator
-)
-
 type PayloadGenerator struct {
 	logManager log.LogManagerInterface
 }
 
 func NewPayloadGenerator(logManager log.LogManagerInterface) *PayloadGenerator {
-	if payloadGenerator == nil {
-		payloadGenerator = &PayloadGenerator{logManager: logManager}
-	}
+	payloadGenerator := &PayloadGenerator{logManager: logManager}
 
 	return payloadGenerator
 }

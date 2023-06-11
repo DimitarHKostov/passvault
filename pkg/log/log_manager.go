@@ -2,19 +2,13 @@ package log
 
 import "go.uber.org/zap"
 
-var (
-	logManager *LogManager
-)
-
 type LogManager struct {
 	logger *zap.Logger
 }
 
 func NewLogManager() *LogManager {
-	if logManager == nil {
-		logger, _ := zap.NewProduction()
-		logManager = &LogManager{logger: logger}
-	}
+	logger, _ := zap.NewProduction()
+	logManager := &LogManager{logger: logger}
 
 	return logManager
 }

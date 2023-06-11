@@ -38,5 +38,11 @@ func (payload *Payload) Valid() error {
 }
 
 type Environment struct {
-	SecretKey string
+	JWTSecretKey     string
+	CrypterSecretKey string
+	Host             string
+	Port             string
+	Username         string
+	Password         string
+	DatabaseName     string
 }

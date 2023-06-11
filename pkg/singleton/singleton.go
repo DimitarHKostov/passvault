@@ -9,26 +9,59 @@ import (
 	"passvault/pkg/log"
 )
 
-func GetCookieManager(secretKey string) cookie.CookieManagerInterface {
-	return cookie.NewCookieManager(GetJwtManager(secretKey), GetLogManager())
+var (
+	cookieManager    cookie.CookieManagerInterface
+	jwtManager       jwt.JWTManagerInterface
+	databaseManager  database.DatabaseManagerInterface
+	cryptManager     crypt.CryptManagerInterface
+	logManager       log.LogManagerInterface
+	payloadGenerator generator.PayloadGeneratorInterface
+)
+
+func GetCookieManager(jwtSecretKey string) cookie.CookieManagerInterface {
+	if cookieManager == nil {
+		cookieManager = cookie.NewCookieManager(GetJwtManager(jwtSecretKey), GetLogManager())
+	}
+
+	return cookieManager
 }
 
-func GetJwtManager(secretKey string) jwt.JWTManagerInterface {
-	return jwt.NewJwtManager(GetPayloadGenerator(), secretKey, GetLogManager())
+func GetJwtManager(jwtSecretKey string) jwt.JWTManagerInterface {
+	if jwtManager == nil {
+		jwtManager = jwt.NewJwtManager(GetPayloadGenerator(), jwtSecretKey, GetLogManager())
+	}
+
+	return jwtManager
 }
 
-func GetDatabaseManager() database.DatabaseManagerInterface {
-	return database.NewDatabaseManager(GetLogManager())
+func GetDatabaseManager(databaseConfig database.DatabaseConfig) database.DatabaseManagerInterface {
+	if databaseManager == nil {
+		databaseManager = database.NewDatabaseManager(GetLogManager(), databaseConfig)
+	}
+
+	return databaseManager
 }
 
-func GetCryptManager() crypt.CryptManagerInterface {
-	return crypt.NewCryptManager(GetLogManager())
+func GetCryptManager(crypterSecretKey []byte) crypt.CryptManagerInterface {
+	if cryptManager == nil {
+		cryptManager = crypt.NewCryptManager(GetLogManager(), crypterSecretKey)
+	}
+
+	return cryptManager
 }
 
 func GetLogManager() log.LogManagerInterface {
-	return log.NewLogManager()
+	if logManager == nil {
+		logManager = log.NewLogManager()
+	}
+
+	return logManager
 }
 
 func GetPayloadGenerator() generator.PayloadGeneratorInterface {
-	return generator.NewPayloadGenerator(GetLogManager())
+	if payloadGenerator == nil {
+		payloadGenerator = generator.NewPayloadGenerator(GetLogManager())
+	}
+
+	return payloadGenerator
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"passvault/pkg/database"
 	"passvault/pkg/log"
 	"passvault/pkg/middleware"
 	"passvault/pkg/operation"
@@ -32,9 +33,7 @@ type App struct {
 }
 
 func NewApp(appRouter *mux.Router, appConfig AppConfig, logManager log.LogManagerInterface, environment types.Environment) *App {
-	if app == nil {
-		app = &App{appRouter: appRouter, appConfig: appConfig, logManager: logManager, environment: environment}
-	}
+	app := &App{appRouter: appRouter, appConfig: appConfig, logManager: logManager, environment: environment}
 
 	return app
 }
@@ -53,7 +52,7 @@ func (a *App) addEndpoint(path string, handlerFunc func(http.ResponseWriter, *ht
 }
 
 func (a *App) registerEndpoints() {
-	secretKey := a.environment.SecretKey
+	secretKey := a.environment.JWTSecretKey
 
 	//todo refactor at some point
 	a.addEndpoint(a.constructPath(operation.Login), a.login, http.MethodPost)
@@ -101,7 +100,7 @@ func (a *App) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookieManager := singleton.GetCookieManager(a.environment.SecretKey)
+	cookieManager := singleton.GetCookieManager(a.environment.JWTSecretKey)
 
 	cookie, err := cookieManager.ProduceCookie()
 	if err != nil {
@@ -146,7 +145,8 @@ func (a *App) save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	databaseManager := singleton.GetDatabaseManager()
+	databaseConfig := database.NewDatabaseConfig(a.environment.Host, a.environment.Port, a.environment.Username, a.environment.Password, a.environment.DatabaseName)
+	databaseManager := singleton.GetDatabaseManager(*databaseConfig)
 
 	found, err := databaseManager.Contains(entry.Domain)
 	if err != nil {
@@ -161,7 +161,7 @@ func (a *App) save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cryptManager := singleton.GetCryptManager()
+	cryptManager := singleton.GetCryptManager([]byte(a.environment.CrypterSecretKey))
 
 	encryptedPassword, err := cryptManager.Encrypt(entry.Password)
 	if err != nil {
@@ -212,8 +212,9 @@ func (a *App) retrieve(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	cryptManager := singleton.GetCryptManager()
-	databaseManager := singleton.GetDatabaseManager()
+	cryptManager := singleton.GetCryptManager([]byte(a.environment.CrypterSecretKey))
+	databaseConfig := database.NewDatabaseConfig(a.environment.Host, a.environment.Port, a.environment.Username, a.environment.Password, a.environment.DatabaseName)
+	databaseManager := singleton.GetDatabaseManager(*databaseConfig)
 
 	found, err := databaseManager.Contains(entry.Domain)
 	if err != nil {
@@ -283,8 +284,8 @@ func (a *App) update(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
-	databaseManager := singleton.GetDatabaseManager()
+	databaseConfig := database.NewDatabaseConfig(a.environment.Host, a.environment.Port, a.environment.Username, a.environment.Password, a.environment.DatabaseName)
+	databaseManager := singleton.GetDatabaseManager(*databaseConfig)
 
 	found, err := databaseManager.Contains(entry.Domain)
 	if err != nil {
@@ -299,7 +300,7 @@ func (a *App) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cryptManager := singleton.GetCryptManager()
+	cryptManager := singleton.GetCryptManager([]byte(a.environment.CrypterSecretKey))
 
 	encryptedPassword, err := cryptManager.Encrypt(entry.Password)
 	if err != nil {

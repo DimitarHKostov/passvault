@@ -19,7 +19,6 @@ const (
 var (
 	InvalidTokenError = errors.New(invalidTokenErrorMessage)
 	ExpiredTokenError = errors.New(expiredTokenErrorMessage)
-	jwtManager        *JWTManager
 )
 
 type JWTManager struct {
@@ -29,12 +28,10 @@ type JWTManager struct {
 }
 
 func NewJwtManager(payloadGenerator generator.PayloadGeneratorInterface, secretKey string, logManager log.LogManagerInterface) *JWTManager {
-	if jwtManager == nil {
-		jwtManager = &JWTManager{
-			payloadGenerator: payloadGenerator,
-			secretKey:        secretKey,
-			logManager:       logManager,
-		}
+	jwtManager := &JWTManager{
+		payloadGenerator: payloadGenerator,
+		secretKey:        secretKey,
+		logManager:       logManager,
 	}
 
 	return jwtManager

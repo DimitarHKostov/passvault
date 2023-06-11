@@ -24,9 +24,9 @@ type DatabaseManager struct {
 	logManager   log.LogManagerInterface
 }
 
-func NewDatabaseManager(logManager log.LogManagerInterface) *DatabaseManager {
+func NewDatabaseManager(logManager log.LogManagerInterface, databaseConfig DatabaseConfig) *DatabaseManager {
 	if databaseManager == nil {
-		dbConn, err := sql.Open(mysqlDriverName, formatCredentials(*GetDatabaseConfig()))
+		dbConn, err := sql.Open(mysqlDriverName, formatCredentials(databaseConfig))
 		if err != nil {
 			//todo log
 			panic(err)
@@ -39,7 +39,7 @@ func NewDatabaseManager(logManager log.LogManagerInterface) *DatabaseManager {
 }
 
 func formatCredentials(databaseConfig DatabaseConfig) string {
-	return fmt.Sprintf(mysqlDriverConnectionString, databaseConfig.Username, databaseConfig.Password, databaseConfig.Host, databaseConfig.Port, databaseConfig.DatabaseName)
+	return fmt.Sprintf(mysqlDriverConnectionString, databaseConfig.username, databaseConfig.password, databaseConfig.host, databaseConfig.port, databaseConfig.databaseName)
 }
 
 func (dm *DatabaseManager) Save(entry types.Entry) error {
