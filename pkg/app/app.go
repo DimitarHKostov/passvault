@@ -16,25 +16,34 @@ const (
 
 var (
 	basePath *string
+	app      *App
 )
 
 type App struct {
-	AppRouter  *mux.Router
-	AppConfig  AppConfig
-	LogManager log.LogManagerInterface
+	appRouter  *mux.Router
+	appConfig  AppConfig
+	logManager log.LogManagerInterface
+}
+
+func NewApp(appRouter *mux.Router, appConfig AppConfig, logManager log.LogManagerInterface) *App {
+	if app == nil {
+		app = &App{appRouter: appRouter, appConfig: appConfig, logManager: logManager}
+	}
+
+	return app
 }
 
 func (a *App) constructPath(operation operation.Operation) string {
 	if basePath == nil {
 		basePath = new(string)
-		*basePath = fmt.Sprintf(basePathTemplate, a.AppConfig.AppVersion)
+		*basePath = fmt.Sprintf(basePathTemplate, a.appConfig.AppVersion)
 	}
 
 	return *basePath + fmt.Sprintf("/%s", operation.String())
 }
 
 func (a *App) addEndpoint(path string, handlerFunc func(http.ResponseWriter, *http.Request), methods ...string) {
-	a.AppRouter.Path(path).HandlerFunc(handlerFunc).Methods(methods...)
+	a.appRouter.Path(path).HandlerFunc(handlerFunc).Methods(methods...)
 }
 
 func (a *App) registerEndpoints() {
@@ -56,5 +65,5 @@ func (a *App) Run() error {
 
 	//todo log
 
-	return http.ListenAndServe(a.AppConfig.AppPort, a.AppRouter)
+	return http.ListenAndServe(a.appConfig.AppPort, a.appRouter)
 }

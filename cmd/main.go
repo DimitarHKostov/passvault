@@ -8,11 +8,7 @@ import (
 )
 
 func run() {
-	app := app.App{
-		AppRouter:  mux.NewRouter(),
-		AppConfig:  *app.GetAppConfig(),
-		LogManager: singleton.GetLogManager(),
-	}
+	app := app.NewApp(mux.NewRouter(), *app.GetAppConfig(), singleton.GetLogManager())
 
 	if err := app.Run(); err != nil {
 		//todo log
