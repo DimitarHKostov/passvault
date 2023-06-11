@@ -12,8 +12,6 @@
 
 
 TODO:
-1). logs
-2). unit tests
-3). load from env
-4). refactor
-5). ...
+## logs
+## unit tests
+## load from env
