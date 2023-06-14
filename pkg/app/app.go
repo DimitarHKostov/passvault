@@ -27,12 +27,12 @@ var (
 
 type App struct {
 	appRouter   *mux.Router
-	appConfig   AppConfig
-	logManager  log.LogManagerInterface
-	environment types.Environment
+	appConfig   *AppConfig
+	logManager  *log.LogManagerInterface
+	environment *types.Environment
 }
 
-func NewApp(appRouter *mux.Router, appConfig AppConfig, logManager log.LogManagerInterface, environment types.Environment) *App {
+func NewApp(appRouter *mux.Router, appConfig *AppConfig, logManager *log.LogManagerInterface, environment *types.Environment) *App {
 	app := &App{appRouter: appRouter, appConfig: appConfig, logManager: logManager, environment: environment}
 
 	return app
@@ -70,17 +70,15 @@ func (a *App) Run() error {
 }
 
 func (a *App) login(w http.ResponseWriter, r *http.Request) {
-	logManager := singleton.GetLogManager()
-
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		logManager.LogError(err.Error())
+		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if len(body) == 0 {
-		logManager.LogDebug(types.EmptyBodyMessage)
+		(*a.logManager).LogDebug(types.EmptyBodyMessage)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -88,14 +86,14 @@ func (a *App) login(w http.ResponseWriter, r *http.Request) {
 	var credentials types.Credentials
 	err = json.Unmarshal(body, &credentials)
 	if err != nil {
-		logManager.LogError(err.Error())
+		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	validation := validation.LoginValidation{PasswordToValidate: []byte(credentials.Password)}
 	if err := validation.Validate(); err != nil {
-		logManager.LogDebug(err.Error())
+		(*a.logManager).LogDebug(err.Error())
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -104,28 +102,25 @@ func (a *App) login(w http.ResponseWriter, r *http.Request) {
 
 	cookie, err := cookieManager.ProduceCookie()
 	if err != nil {
-		logManager.LogError(err.Error())
+		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	http.SetCookie(w, cookie)
-
 	w.WriteHeader(http.StatusOK)
 }
 
 func (a *App) save(w http.ResponseWriter, r *http.Request) {
-	logManager := singleton.GetLogManager()
-
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		logManager.LogError(err.Error())
+		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if len(body) == 0 {
-		logManager.LogDebug(types.EmptyBodyMessage)
+		(*a.logManager).LogDebug(types.EmptyBodyMessage)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -133,14 +128,14 @@ func (a *App) save(w http.ResponseWriter, r *http.Request) {
 	var entry types.Entry
 	err = json.Unmarshal(body, &entry)
 	if err != nil {
-		logManager.LogError(err.Error())
+		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	validation := validation.EntryValidation{EntryToValidate: entry}
 	if err := validation.Validate(); err != nil {
-		logManager.LogDebug(err.Error())
+		(*a.logManager).LogDebug(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -150,7 +145,7 @@ func (a *App) save(w http.ResponseWriter, r *http.Request) {
 
 	found, err := databaseManager.Contains(entry.Domain)
 	if err != nil {
-		logManager.LogError(err.Error())
+		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -165,7 +160,7 @@ func (a *App) save(w http.ResponseWriter, r *http.Request) {
 
 	encryptedPassword, err := cryptManager.Encrypt(entry.Password)
 	if err != nil {
-		logManager.LogError(err.Error())
+		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -174,7 +169,7 @@ func (a *App) save(w http.ResponseWriter, r *http.Request) {
 
 	err = databaseManager.Save(entry)
 	if err != nil {
-		logManager.LogError(err.Error())
+		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -183,17 +178,15 @@ func (a *App) save(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) retrieve(w http.ResponseWriter, r *http.Request) {
-	logManager := singleton.GetLogManager()
-
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		logManager.LogError(err.Error())
+		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if len(body) == 0 {
-		logManager.LogDebug(types.EmptyBodyMessage)
+		(*a.logManager).LogDebug(types.EmptyBodyMessage)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -201,14 +194,14 @@ func (a *App) retrieve(w http.ResponseWriter, r *http.Request) {
 	var entry types.Entry
 	err = json.Unmarshal(body, &entry)
 	if err != nil {
-		logManager.LogError(err.Error())
+		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	validation := validation.DomainValidation{DomainToValidate: entry.Domain}
 	if err := validation.Validate(); err != nil {
-		logManager.LogDebug(err.Error())
+		(*a.logManager).LogDebug(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -218,7 +211,7 @@ func (a *App) retrieve(w http.ResponseWriter, r *http.Request) {
 
 	found, err := databaseManager.Contains(entry.Domain)
 	if err != nil {
-		logManager.LogError(err.Error())
+		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -231,14 +224,14 @@ func (a *App) retrieve(w http.ResponseWriter, r *http.Request) {
 
 	queriedEntry, err := databaseManager.Get(entry.Domain)
 	if err != nil {
-		logManager.LogError(err.Error())
+		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	decryptedPassword, err := cryptManager.Decrypt(queriedEntry.Password)
 	if err != nil {
-		logManager.LogError(err.Error())
+		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -247,7 +240,7 @@ func (a *App) retrieve(w http.ResponseWriter, r *http.Request) {
 
 	jsonBytes, err := json.Marshal(&queriedEntry)
 	if err != nil {
-		logManager.LogError(err.Error())
+		(*a.logManager).LogError(err.Error())
 		return
 	}
 
@@ -255,17 +248,15 @@ func (a *App) retrieve(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) update(w http.ResponseWriter, r *http.Request) {
-	logManager := singleton.GetLogManager()
-
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		logManager.LogError(err.Error())
+		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if len(body) == 0 {
-		logManager.LogError(types.EmptyBodyMessage)
+		(*a.logManager).LogError(types.EmptyBodyMessage)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -273,14 +264,14 @@ func (a *App) update(w http.ResponseWriter, r *http.Request) {
 	var entry types.Entry
 	err = json.Unmarshal(body, &entry)
 	if err != nil {
-		logManager.LogError(err.Error())
+		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	validation := validation.EntryValidation{EntryToValidate: entry}
 	if err := validation.Validate(); err != nil {
-		logManager.LogError(err.Error())
+		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -289,7 +280,7 @@ func (a *App) update(w http.ResponseWriter, r *http.Request) {
 
 	found, err := databaseManager.Contains(entry.Domain)
 	if err != nil {
-		logManager.LogError(err.Error())
+		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -304,7 +295,7 @@ func (a *App) update(w http.ResponseWriter, r *http.Request) {
 
 	encryptedPassword, err := cryptManager.Encrypt(entry.Password)
 	if err != nil {
-		logManager.LogError(err.Error())
+		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -313,7 +304,7 @@ func (a *App) update(w http.ResponseWriter, r *http.Request) {
 
 	err = databaseManager.Update(entry)
 	if err != nil {
-		logManager.LogError(err.Error())
+		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

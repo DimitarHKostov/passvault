@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"passvault/pkg/generator"
+
 	"passvault/pkg/log"
 	"passvault/pkg/types"
 	"time"

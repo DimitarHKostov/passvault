@@ -9,16 +9,20 @@ import (
 )
 
 func main() {
-	app := app.NewApp(mux.NewRouter(), *app.NewAppConfig(), singleton.GetLogManager(), getEnvironmentVariables())
+	logManager := singleton.GetLogManager()
+	appConfig := app.NewAppConfig()
+	appRouter := mux.NewRouter()
+	envVariables := getEnvironmentVariables()
+
+	app := app.NewApp(appRouter, appConfig, &logManager, envVariables)
 
 	if err := app.Run(); err != nil {
-		//todo log
-		panic(err)
+		logManager.LogPanic(err.Error())
 	}
 }
 
-func getEnvironmentVariables() types.Environment {
-	return types.Environment{
+func getEnvironmentVariables() *types.Environment {
+	return &types.Environment{
 		JWTSecretKey:     "asdasasdasasdasasdasasdasaa",
 		CrypterSecretKey: "this is secret key enough 32 bit",
 		Host:             "localhost",
