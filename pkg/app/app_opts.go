@@ -5,6 +5,7 @@ import (
 	"passvault/pkg/crypt"
 	"passvault/pkg/database"
 	"passvault/pkg/log"
+	"passvault/pkg/middleware"
 	"passvault/pkg/types"
 
 	"github.com/gorilla/mux"
@@ -19,6 +20,7 @@ type AppOpts struct {
 	DatabaseManager *database.DatabaseManagerInterface
 	CryptManager    *crypt.CryptManagerInterface
 	CookieManager   *cookie.CookieManagerInterface
+	Middleware      *middleware.MiddlewareInterface
 }
 
 func defaultAppOpts() AppOpts {

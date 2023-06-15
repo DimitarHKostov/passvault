@@ -15,29 +15,23 @@ const (
 	mysqlDriverConnectionString = "%s:%s@tcp(%s:%s)/%s"
 )
 
-var (
-	databaseManager *DatabaseManager
-)
-
 type DatabaseManager struct {
 	dbConnection *sql.DB
 	logManager   log.LogManagerInterface
 }
 
-func NewDatabaseManager(logManager log.LogManagerInterface, databaseConfig DatabaseConfig) *DatabaseManager {
-	if databaseManager == nil {
-		dbConn, err := sql.Open(mysqlDriverName, formatCredentials(databaseConfig))
-		if err != nil {
-			logManager.LogPanic(fmt.Sprintf(dbConnectionOpenErrorMessage, err))
-		}
-
-		databaseManager = &DatabaseManager{dbConnection: dbConn, logManager: logManager}
+func NewDatabaseManager(logManager log.LogManagerInterface, databaseConfig *DatabaseConfig) *DatabaseManager {
+	dbConn, err := sql.Open(mysqlDriverName, formatCredentials(databaseConfig))
+	if err != nil {
+		logManager.LogPanic(fmt.Sprintf(dbConnectionOpenErrorMessage, err))
 	}
+
+	databaseManager := &DatabaseManager{dbConnection: dbConn, logManager: logManager}
 
 	return databaseManager
 }
 
-func formatCredentials(databaseConfig DatabaseConfig) string {
+func formatCredentials(databaseConfig *DatabaseConfig) string {
 	return fmt.Sprintf(mysqlDriverConnectionString, databaseConfig.username, databaseConfig.password, databaseConfig.host, databaseConfig.port, databaseConfig.databaseName)
 }
 

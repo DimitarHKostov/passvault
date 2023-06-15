@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"passvault/pkg/middleware"
 	"passvault/pkg/operation"
 	"passvault/pkg/types"
 	"passvault/pkg/validation"
@@ -17,7 +16,6 @@ const (
 
 var (
 	basePath *string
-	app      *App
 )
 
 type App struct {
@@ -32,7 +30,7 @@ func NewApp(opts ...AppOptFunc) *App {
 		fn(&appOpts)
 	}
 
-	app := &App{AppOpts: appOpts, appConfig: NewAppConfig()}
+	app := &App{AppOpts: appOpts, appConfig: newAppConfig()}
 
 	return app
 }
@@ -51,13 +49,12 @@ func (a *App) addEndpoint(path string, handlerFunc func(http.ResponseWriter, *ht
 }
 
 func (a *App) registerEndpoints() {
-	secretKey := a.AppOpts.Environment.JWTSecretKey
+	middleware := a.AppOpts.Middleware
 
-	//todo refactor at some point
 	a.addEndpoint(a.constructPath(operation.Login), a.login, http.MethodPost)
-	a.addEndpoint(a.constructPath(operation.Save), middleware.Middleware(http.HandlerFunc(a.save), secretKey), http.MethodPost)
-	a.addEndpoint(a.constructPath(operation.Retrieve), middleware.Middleware(http.HandlerFunc(a.retrieve), secretKey), http.MethodGet)
-	a.addEndpoint(a.constructPath(operation.Update), middleware.Middleware(http.HandlerFunc(a.update), secretKey), http.MethodPut)
+	a.addEndpoint(a.constructPath(operation.Save), (*middleware).Intercept(http.HandlerFunc(a.save)), http.MethodPost)
+	a.addEndpoint(a.constructPath(operation.Retrieve), (*middleware).Intercept(http.HandlerFunc(a.retrieve)), http.MethodGet)
+	a.addEndpoint(a.constructPath(operation.Update), (*middleware).Intercept(http.HandlerFunc(a.update)), http.MethodPut)
 }
 
 func (a *App) Run() error {

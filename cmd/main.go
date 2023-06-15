@@ -2,7 +2,6 @@ package main
 
 import (
 	"passvault/pkg/app"
-	"passvault/pkg/database"
 	"passvault/pkg/singleton"
 	"passvault/pkg/types"
 
@@ -18,28 +17,34 @@ func main() {
 }
 
 func initApp() *app.App {
-	app := app.NewApp(withLogManager, withAppRouter, withCookieManager, withCryptManager, withDatabaseManager, withEnvironment)
+	app := app.NewApp(withLogManager, withAppRouter, withCookieManager, withCryptManager, withDatabaseManager, withEnvironment, withMiddleware)
 
 	return app
 }
 
-func withEnvironment(opts *app.AppOpts) {
-	envVariables := getEnvironmentVariables()
+func withMiddleware(opts *app.AppOpts) {
+	env := getEnvironmentVariables()
+	middleware := singleton.GetMiddleware(env)
 
-	opts.Environment = envVariables
+	opts.Middleware = &middleware
+}
+
+func withEnvironment(opts *app.AppOpts) {
+	env := getEnvironmentVariables()
+
+	opts.Environment = env
 }
 
 func withCookieManager(opts *app.AppOpts) {
-	envVariables := getEnvironmentVariables()
-	cookieManager := singleton.GetCookieManager(envVariables.JWTSecretKey)
+	env := getEnvironmentVariables()
+	cookieManager := singleton.GetCookieManager(env)
 
 	opts.CookieManager = &cookieManager
 }
 
 func withDatabaseManager(opts *app.AppOpts) {
-	envVariables := getEnvironmentVariables()
-	databaseConfig := database.NewDatabaseConfig(envVariables.Host, envVariables.Port, envVariables.Username, envVariables.Password, envVariables.DatabaseName)
-	databaseManager := singleton.GetDatabaseManager(*databaseConfig)
+	env := getEnvironmentVariables()
+	databaseManager := singleton.GetDatabaseManager(env)
 
 	opts.DatabaseManager = &databaseManager
 }
@@ -57,8 +62,8 @@ func withAppRouter(opts *app.AppOpts) {
 }
 
 func withCryptManager(opts *app.AppOpts) {
-	envVariables := getEnvironmentVariables()
-	cryptManager := singleton.GetCryptManager([]byte(envVariables.CrypterSecretKey))
+	env := getEnvironmentVariables()
+	cryptManager := singleton.GetCryptManager(env)
 
 	opts.CryptManager = &cryptManager
 }

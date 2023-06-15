@@ -12,7 +12,7 @@ type AppConfig struct {
 	appPort    string
 }
 
-func NewAppConfig() *AppConfig {
+func newAppConfig() *AppConfig {
 	appConfig := &AppConfig{appName: appName, appVersion: appVersion, appPort: appPort}
 
 	return appConfig

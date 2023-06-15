@@ -7,6 +7,8 @@ import (
 	"passvault/pkg/generator"
 	"passvault/pkg/jwt"
 	"passvault/pkg/log"
+	m "passvault/pkg/middleware"
+	"passvault/pkg/types"
 )
 
 var (
@@ -16,35 +18,45 @@ var (
 	cryptManager     crypt.CryptManagerInterface
 	logManager       log.LogManagerInterface
 	payloadGenerator generator.PayloadGeneratorInterface
+	middleware       m.MiddlewareInterface
 )
 
-func GetCookieManager(jwtSecretKey string) cookie.CookieManagerInterface {
+func GetMiddleware(env *types.Environment) m.MiddlewareInterface {
+	if middleware == nil {
+		middleware = m.NewMiddleware(GetLogManager(), GetJwtManager(env))
+	}
+
+	return middleware
+}
+
+func GetCookieManager(env *types.Environment) cookie.CookieManagerInterface {
 	if cookieManager == nil {
-		cookieManager = cookie.NewCookieManager(GetJwtManager(jwtSecretKey), GetLogManager())
+		cookieManager = cookie.NewCookieManager(GetJwtManager(env), GetLogManager())
 	}
 
 	return cookieManager
 }
 
-func GetJwtManager(jwtSecretKey string) jwt.JWTManagerInterface {
+func GetJwtManager(env *types.Environment) jwt.JWTManagerInterface {
 	if jwtManager == nil {
-		jwtManager = jwt.NewJwtManager(GetPayloadGenerator(), jwtSecretKey, GetLogManager())
+		jwtManager = jwt.NewJwtManager(GetPayloadGenerator(), env.JWTSecretKey, GetLogManager())
 	}
 
 	return jwtManager
 }
 
-func GetDatabaseManager(databaseConfig database.DatabaseConfig) database.DatabaseManagerInterface {
+func GetDatabaseManager(env *types.Environment) database.DatabaseManagerInterface {
 	if databaseManager == nil {
+		databaseConfig := database.NewDatabaseConfig(env.Host, env.Port, env.Username, env.Password, env.DatabaseName)
 		databaseManager = database.NewDatabaseManager(GetLogManager(), databaseConfig)
 	}
 
 	return databaseManager
 }
 
-func GetCryptManager(crypterSecretKey []byte) crypt.CryptManagerInterface {
+func GetCryptManager(env *types.Environment) crypt.CryptManagerInterface {
 	if cryptManager == nil {
-		cryptManager = crypt.NewCryptManager(GetLogManager(), crypterSecretKey)
+		cryptManager = crypt.NewCryptManager(GetLogManager(), []byte(env.CrypterSecretKey))
 	}
 
 	return cryptManager
