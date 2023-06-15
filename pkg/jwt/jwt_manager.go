@@ -2,6 +2,7 @@ package jwt
 
 import (
 	"errors"
+	"fmt"
 
 	"passvault/pkg/generator"
 
@@ -10,11 +11,6 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
-)
-
-const (
-	invalidTokenErrorMessage = "token is invalid"
-	expiredTokenErrorMessage = "token has expired"
 )
 
 var (
@@ -41,13 +37,12 @@ func NewJwtManager(payloadGenerator generator.PayloadGeneratorInterface, secretK
 func (jwtm *JWTManager) GenerateToken(duration time.Duration) (string, error) {
 	payload, err := jwtm.payloadGenerator.GeneratePayload(duration)
 	if err != nil {
-		//todo log
+		jwtm.logManager.LogError(fmt.Sprintf(payloadGenerationFailMessage, err))
 		return "", err
 	}
 
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
 
-	//todo log
 	return jwtToken.SignedString([]byte(jwtm.secretKey))
 }
 
@@ -55,31 +50,33 @@ func (jwtm *JWTManager) VerifyToken(token string) (*types.Payload, error) {
 	keyFunc := func(token *jwt.Token) (interface{}, error) {
 		_, ok := token.Method.(*jwt.SigningMethodHMAC)
 		if !ok {
-			//todo log
+			jwtm.logManager.LogError(invalidTokenErrorMessage)
 			return nil, InvalidTokenError
 		}
-		//todo log
+
 		return []byte(jwtm.secretKey), nil
 	}
 
 	jwtToken, err := jwt.ParseWithClaims(token, &types.Payload{}, keyFunc)
 	if err != nil {
-		//todo log
 		verr, ok := err.(*jwt.ValidationError)
 		if ok && errors.Is(verr.Inner, ExpiredTokenError) {
-			//todo log
+			jwtm.logManager.LogError(expiredTokenErrorMessage)
 			return nil, ExpiredTokenError
 		}
-		//todo log
+
+		jwtm.logManager.LogError(invalidTokenErrorMessage)
+
 		return nil, InvalidTokenError
 	}
 
 	payload, ok := jwtToken.Claims.(*types.Payload)
 	if !ok {
-		//todo log
+		jwtm.logManager.LogError(invalidTokenErrorMessage)
 		return nil, InvalidTokenError
 	}
 
-	//todo log
+	jwtm.logManager.LogDebug(successfulTokenVerification)
+
 	return payload, nil
 }

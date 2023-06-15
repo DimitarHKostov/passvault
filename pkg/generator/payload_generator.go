@@ -1,6 +1,7 @@
 package generator
 
 import (
+	"fmt"
 	"passvault/pkg/log"
 	"passvault/pkg/types"
 	"time"
@@ -21,6 +22,7 @@ func NewPayloadGenerator(logManager log.LogManagerInterface) *PayloadGenerator {
 func (pg *PayloadGenerator) GeneratePayload(duration time.Duration) (*types.Payload, error) {
 	uuid, err := uuid.NewRandom()
 	if err != nil {
+		pg.logManager.LogError(fmt.Sprintf(uuidGenerationFailMessage, err))
 		return nil, err
 	}
 
@@ -29,6 +31,8 @@ func (pg *PayloadGenerator) GeneratePayload(duration time.Duration) (*types.Payl
 		IssuedAt:  time.Now(),
 		ExpiredAt: time.Now().Add(duration),
 	}
+
+	pg.logManager.LogDebug(successfulPayloadGenerationMessage)
 
 	return payload, nil
 }

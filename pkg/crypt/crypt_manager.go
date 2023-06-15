@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/aes"
 	"encoding/hex"
+	"fmt"
 	"passvault/pkg/log"
 )
 
@@ -24,7 +25,7 @@ func NewCryptManager(logManager log.LogManagerInterface, key []byte) *CryptManag
 func (cm *CryptManager) Encrypt(plaintext string) (*string, error) {
 	c, err := aes.NewCipher(cm.key)
 	if err != nil {
-		//todo log
+		cm.logManager.LogError(fmt.Sprintf(failEncryptionMessage, err))
 		return nil, err
 	}
 
@@ -39,7 +40,8 @@ func (cm *CryptManager) Encrypt(plaintext string) (*string, error) {
 	c.Encrypt(out, plaintextBytes)
 	encToString := hex.EncodeToString(out)
 
-	//todo log
+	cm.logManager.LogDebug(successfulEncryptionMessage)
+
 	return &(encToString), nil
 }
 
@@ -47,7 +49,7 @@ func (cm *CryptManager) Decrypt(encryptedHex string) (*string, error) {
 	ciphertext, _ := hex.DecodeString(encryptedHex)
 	c, err := aes.NewCipher(cm.key)
 	if err != nil {
-		//todo log
+		cm.logManager.LogError(fmt.Sprintf(failDecryptionMessage, err))
 		return nil, err
 	}
 
@@ -57,6 +59,7 @@ func (cm *CryptManager) Decrypt(encryptedHex string) (*string, error) {
 	padLen := int(pt[len(pt)-1])
 	s := string(pt[:len(pt)-padLen])
 
-	//todo log
+	cm.logManager.LogDebug(successfulDecryptionMessage)
+
 	return &s, nil
 }

@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"passvault/pkg/cookie"
+	"passvault/pkg/crypt"
 	"passvault/pkg/database"
 	"passvault/pkg/log"
 	"passvault/pkg/middleware"
 	"passvault/pkg/operation"
-	"passvault/pkg/singleton"
 	"passvault/pkg/types"
 	"passvault/pkg/validation"
 
@@ -17,7 +18,7 @@ import (
 )
 
 const (
-	basePathTemplate = "/api/%s"
+	basePathTemplate           = "/api/%s"
 )
 
 var (
@@ -26,14 +27,25 @@ var (
 )
 
 type App struct {
-	appRouter   *mux.Router
-	appConfig   *AppConfig
-	logManager  *log.LogManagerInterface
-	environment *types.Environment
+	appRouter       *mux.Router
+	appConfig       *AppConfig
+	logManager      *log.LogManagerInterface
+	environment     *types.Environment
+	databaseManager *database.DatabaseManagerInterface
+	cryptManager    *crypt.CryptManagerInterface
+	cookieManager   *cookie.CookieManagerInterface
 }
 
-func NewApp(appRouter *mux.Router, appConfig *AppConfig, logManager *log.LogManagerInterface, environment *types.Environment) *App {
-	app := &App{appRouter: appRouter, appConfig: appConfig, logManager: logManager, environment: environment}
+// todo refactor at some point(pattern WITH probably)
+func NewApp(appRouter *mux.Router, appConfig *AppConfig, logManager *log.LogManagerInterface, environment *types.Environment, databaseManager *database.DatabaseManagerInterface, cryptManager *crypt.CryptManagerInterface, cookieManager *cookie.CookieManagerInterface) *App {
+	app := &App{
+		appRouter:       appRouter,
+		appConfig:       appConfig,
+		logManager:      logManager,
+		environment:     environment,
+		databaseManager: databaseManager,
+		cryptManager:    cryptManager,
+		cookieManager:   cookieManager}
 
 	return app
 }
@@ -62,10 +74,9 @@ func (a *App) registerEndpoints() {
 }
 
 func (a *App) Run() error {
+	(*a.logManager).LogInfo(initMessage)
+
 	a.registerEndpoints()
-
-	//todo log
-
 	return http.ListenAndServe(a.appConfig.appPort, a.appRouter)
 }
 
@@ -98,9 +109,7 @@ func (a *App) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cookieManager := singleton.GetCookieManager(a.environment.JWTSecretKey)
-
-	cookie, err := cookieManager.ProduceCookie()
+	cookie, err := (*a.cookieManager).ProduceCookie()
 	if err != nil {
 		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -140,10 +149,7 @@ func (a *App) save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	databaseConfig := database.NewDatabaseConfig(a.environment.Host, a.environment.Port, a.environment.Username, a.environment.Password, a.environment.DatabaseName)
-	databaseManager := singleton.GetDatabaseManager(*databaseConfig)
-
-	found, err := databaseManager.Contains(entry.Domain)
+	found, err := (*a.databaseManager).Contains(entry.Domain)
 	if err != nil {
 		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -151,14 +157,12 @@ func (a *App) save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if found {
-		//todo log
+		(*a.logManager).LogDebug(domainAlreadyExistsMessage)
 		w.WriteHeader(http.StatusConflict)
 		return
 	}
 
-	cryptManager := singleton.GetCryptManager([]byte(a.environment.CrypterSecretKey))
-
-	encryptedPassword, err := cryptManager.Encrypt(entry.Password)
+	encryptedPassword, err := (*a.cryptManager).Encrypt(entry.Password)
 	if err != nil {
 		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -167,7 +171,7 @@ func (a *App) save(w http.ResponseWriter, r *http.Request) {
 
 	entry.Password = *encryptedPassword
 
-	err = databaseManager.Save(entry)
+	err = (*a.databaseManager).Save(entry)
 	if err != nil {
 		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -205,11 +209,8 @@ func (a *App) retrieve(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	cryptManager := singleton.GetCryptManager([]byte(a.environment.CrypterSecretKey))
-	databaseConfig := database.NewDatabaseConfig(a.environment.Host, a.environment.Port, a.environment.Username, a.environment.Password, a.environment.DatabaseName)
-	databaseManager := singleton.GetDatabaseManager(*databaseConfig)
 
-	found, err := databaseManager.Contains(entry.Domain)
+	found, err := (*a.databaseManager).Contains(entry.Domain)
 	if err != nil {
 		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -217,19 +218,19 @@ func (a *App) retrieve(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !found {
-		//todo log
+		(*a.logManager).LogDebug(domainDoesNotExistMessage)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	queriedEntry, err := databaseManager.Get(entry.Domain)
+	queriedEntry, err := (*a.databaseManager).Get(entry.Domain)
 	if err != nil {
 		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	decryptedPassword, err := cryptManager.Decrypt(queriedEntry.Password)
+	decryptedPassword, err := (*a.cryptManager).Decrypt(queriedEntry.Password)
 	if err != nil {
 		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -275,10 +276,8 @@ func (a *App) update(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	databaseConfig := database.NewDatabaseConfig(a.environment.Host, a.environment.Port, a.environment.Username, a.environment.Password, a.environment.DatabaseName)
-	databaseManager := singleton.GetDatabaseManager(*databaseConfig)
 
-	found, err := databaseManager.Contains(entry.Domain)
+	found, err := (*a.databaseManager).Contains(entry.Domain)
 	if err != nil {
 		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -286,14 +285,12 @@ func (a *App) update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !found {
-		//todo log
+		(*a.logManager).LogDebug(domainDoesNotExistMessage)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	cryptManager := singleton.GetCryptManager([]byte(a.environment.CrypterSecretKey))
-
-	encryptedPassword, err := cryptManager.Encrypt(entry.Password)
+	encryptedPassword, err := (*a.cryptManager).Encrypt(entry.Password)
 	if err != nil {
 		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
@@ -302,7 +299,7 @@ func (a *App) update(w http.ResponseWriter, r *http.Request) {
 
 	entry.Password = *encryptedPassword
 
-	err = databaseManager.Update(entry)
+	err = (*a.databaseManager).Update(entry)
 	if err != nil {
 		(*a.logManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)

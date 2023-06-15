@@ -15,14 +15,13 @@ const (
 
 func Middleware(next http.HandlerFunc, secretKey string) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		//logManager := log.Get()
+		logManager := singleton.GetLogManager()
 		cookies := r.Cookies()
 
 		for _, cookie := range cookies {
 			if cookie != nil && cookie.Name == types.CookieName {
 				if cookie.Value == "" {
-					// todo log
-					//log.Println(emptyCookieValueMessage)
+					logManager.LogError(emptyCookieValueMessage)
 					w.WriteHeader(http.StatusUnauthorized)
 					return
 				}
@@ -31,26 +30,24 @@ func Middleware(next http.HandlerFunc, secretKey string) http.HandlerFunc {
 
 				_, err := jwtManager.VerifyToken(cookie.Value)
 				if err == jwt.InvalidTokenError || err == jwt.ExpiredTokenError {
-					//log.Println(err)
-					// todo log
+					logManager.LogError(err.Error())
 					w.WriteHeader(http.StatusUnauthorized)
 					return
 				}
 
 				if err != nil {
-					//log.Println(err)
-					// todo log
+					logManager.LogError(internetServerErrorMessage)
 					w.WriteHeader(http.StatusInternalServerError)
 					return
 				}
 
-				// todo log
+				logManager.LogDebug(successfulMiddlewareCheckMessage)
 				next.ServeHTTP(w, r)
 				return
 			}
 		}
 
-		// todo log
+		logManager.LogDebug(cookieNotProvidedMessage)
 		w.WriteHeader(http.StatusUnauthorized)
 	})
 }

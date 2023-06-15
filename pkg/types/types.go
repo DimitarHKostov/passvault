@@ -34,6 +34,7 @@ func (payload *Payload) Valid() error {
 		errorMessage := "token has expired"
 		return errors.New(errorMessage)
 	}
+	
 	return nil
 }
 

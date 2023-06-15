@@ -2,7 +2,6 @@ package validation
 
 import (
 	"errors"
-	"log"
 	"passvault/pkg/types"
 	"strings"
 )
@@ -41,12 +40,10 @@ func (ev *EntryValidation) Validate() error {
 }
 
 func (ev *EntryValidation) validatePassword(password string) error {
-	log.Println("gurmi tuka apss")
 	return ev.genericValidation(password)
 }
 
 func (ev *EntryValidation) validateUsername(username string) error {
-	log.Println("gurmi tuka user")
 	return ev.genericValidation(username)
 }
 

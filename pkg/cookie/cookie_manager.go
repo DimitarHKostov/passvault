@@ -1,7 +1,7 @@
 package cookie
 
 import (
-	"errors"
+	"fmt"
 	"net/http"
 	"passvault/pkg/jwt"
 	"passvault/pkg/log"
@@ -30,13 +30,13 @@ func NewCookieManager(jwtManager jwt.JWTManagerInterface, logManager log.LogMana
 func (c *CookieManager) ProduceCookie() (*http.Cookie, error) {
 	token, err := c.jwtManager.GenerateToken(expirationTime)
 	if err != nil {
-		//todo log
-		errorMessage := "error occurred while creating token"
-		return nil, errors.New(errorMessage)
+		c.logManager.LogError(fmt.Sprintf(errorTokenGenerationMessage, err))
+		return nil, err
 	}
 
-	//todo log
 	cookie := http.Cookie{Name: types.CookieName, Value: token, Expires: time.Now().Add(expirationTime), HttpOnly: types.CookieHttpOnly}
+
+	c.logManager.LogDebug(successfulCookieCreationMessage)
 
 	return &cookie, nil
 }

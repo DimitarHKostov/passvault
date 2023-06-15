@@ -28,8 +28,7 @@ func NewDatabaseManager(logManager log.LogManagerInterface, databaseConfig Datab
 	if databaseManager == nil {
 		dbConn, err := sql.Open(mysqlDriverName, formatCredentials(databaseConfig))
 		if err != nil {
-			//todo log
-			panic(err)
+			logManager.LogPanic(fmt.Sprintf(dbConnectionOpenErrorMessage, err))
 		}
 
 		databaseManager = &DatabaseManager{dbConnection: dbConn, logManager: logManager}
@@ -47,7 +46,7 @@ func (dm *DatabaseManager) Save(entry types.Entry) error {
 
 	stmt, err := dm.dbConnection.Prepare(query)
 	if err != nil {
-		//todo log
+		dm.logManager.LogError(fmt.Sprintf(queryPreparationFailMessage, err))
 		return err
 	}
 
@@ -55,11 +54,11 @@ func (dm *DatabaseManager) Save(entry types.Entry) error {
 
 	_, err = stmt.Exec(entry.Domain, entry.Username, entry.Password)
 	if err != nil {
-		//todo log
+		dm.logManager.LogError(fmt.Sprintf(dbQueryExecFailMessage, err))
 		return err
 	}
 
-	//todo log
+	dm.logManager.LogDebug(successfulEntrySaveMessage)
 	return nil
 }
 
@@ -68,7 +67,7 @@ func (dm *DatabaseManager) Get(domain string) (*types.Entry, error) {
 
 	stmt, err := dm.dbConnection.Prepare(query)
 	if err != nil {
-		//todo log
+		dm.logManager.LogError(fmt.Sprintf(queryPreparationFailMessage, err))
 		return nil, err
 	}
 
@@ -77,14 +76,13 @@ func (dm *DatabaseManager) Get(domain string) (*types.Entry, error) {
 	var entry types.Entry
 
 	row := stmt.QueryRow(domain)
-
 	err = row.Scan(&entry.Domain, &entry.Username, &entry.Password)
 	if err != nil {
-		//todo log
+		dm.logManager.LogError(fmt.Sprintf(rowQueryFailMessage, err))
 		return nil, err
 	}
 
-	//todo log
+	dm.logManager.LogDebug(successfulEntryGetMessage)
 	return &entry, nil
 }
 
@@ -93,7 +91,7 @@ func (dm *DatabaseManager) Contains(domain string) (bool, error) {
 
 	stmt, err := dm.dbConnection.Prepare(query)
 	if err != nil {
-		//todo log
+		dm.logManager.LogError(fmt.Sprintf(queryPreparationFailMessage, err))
 		return false, err
 	}
 
@@ -103,11 +101,11 @@ func (dm *DatabaseManager) Contains(domain string) (bool, error) {
 
 	err = stmt.QueryRow(domain).Scan(&count)
 	if err != nil {
-		//todo log
+		dm.logManager.LogError(fmt.Sprintf(rowQueryFailMessage, err))
 		return false, err
 	}
 
-	//todo log
+	dm.logManager.LogDebug(successfulEntryContainsMessage)
 	return count != 0, nil
 }
 
@@ -116,7 +114,7 @@ func (dm *DatabaseManager) Update(entry types.Entry) error {
 
 	stmt, err := dm.dbConnection.Prepare(query)
 	if err != nil {
-		//todo log
+		dm.logManager.LogError(fmt.Sprintf(queryPreparationFailMessage, err))
 		return err
 	}
 
@@ -124,10 +122,10 @@ func (dm *DatabaseManager) Update(entry types.Entry) error {
 
 	_, err = stmt.Exec(entry.Username, entry.Password, entry.Domain)
 	if err != nil {
-		//todo log
+		dm.logManager.LogError(fmt.Sprintf(dbQueryExecFailMessage, err))
 		return err
 	}
 
-	//todo log
+	dm.logManager.LogDebug(successfulEntryUpdateMessage)
 	return nil
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"passvault/pkg/app"
+	"passvault/pkg/database"
 	"passvault/pkg/singleton"
 	"passvault/pkg/types"
 
@@ -9,16 +10,27 @@ import (
 )
 
 func main() {
+	app := initApp()
+
+	if err := app.Run(); err != nil {
+		panic(err)
+	}
+}
+
+func initApp() *app.App {
+	envVariables := getEnvironmentVariables()
+
 	logManager := singleton.GetLogManager()
 	appConfig := app.NewAppConfig()
 	appRouter := mux.NewRouter()
-	envVariables := getEnvironmentVariables()
+	databaseConfig := database.NewDatabaseConfig(envVariables.Host, envVariables.Port, envVariables.Username, envVariables.Password, envVariables.DatabaseName)
+	databaseManager := singleton.GetDatabaseManager(*databaseConfig)
+	cryptManager := singleton.GetCryptManager([]byte(envVariables.CrypterSecretKey))
+	cookieManager := singleton.GetCookieManager(envVariables.JWTSecretKey)
 
-	app := app.NewApp(appRouter, appConfig, &logManager, envVariables)
+	app := app.NewApp(appRouter, appConfig, &logManager, envVariables, &databaseManager, &cryptManager, &cookieManager)
 
-	if err := app.Run(); err != nil {
-		logManager.LogPanic(err.Error())
-	}
+	return app
 }
 
 func getEnvironmentVariables() *types.Environment {
