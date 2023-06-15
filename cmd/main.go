@@ -18,19 +18,49 @@ func main() {
 }
 
 func initApp() *app.App {
-	envVariables := getEnvironmentVariables()
-
-	logManager := singleton.GetLogManager()
-	appConfig := app.NewAppConfig()
-	appRouter := mux.NewRouter()
-	databaseConfig := database.NewDatabaseConfig(envVariables.Host, envVariables.Port, envVariables.Username, envVariables.Password, envVariables.DatabaseName)
-	databaseManager := singleton.GetDatabaseManager(*databaseConfig)
-	cryptManager := singleton.GetCryptManager([]byte(envVariables.CrypterSecretKey))
-	cookieManager := singleton.GetCookieManager(envVariables.JWTSecretKey)
-
-	app := app.NewApp(appRouter, appConfig, &logManager, envVariables, &databaseManager, &cryptManager, &cookieManager)
+	app := app.NewApp(withLogManager, withAppRouter, withCookieManager, withCryptManager, withDatabaseManager, withEnvironment)
 
 	return app
+}
+
+func withEnvironment(opts *app.AppOpts) {
+	envVariables := getEnvironmentVariables()
+
+	opts.Environment = envVariables
+}
+
+func withCookieManager(opts *app.AppOpts) {
+	envVariables := getEnvironmentVariables()
+	cookieManager := singleton.GetCookieManager(envVariables.JWTSecretKey)
+
+	opts.CookieManager = &cookieManager
+}
+
+func withDatabaseManager(opts *app.AppOpts) {
+	envVariables := getEnvironmentVariables()
+	databaseConfig := database.NewDatabaseConfig(envVariables.Host, envVariables.Port, envVariables.Username, envVariables.Password, envVariables.DatabaseName)
+	databaseManager := singleton.GetDatabaseManager(*databaseConfig)
+
+	opts.DatabaseManager = &databaseManager
+}
+
+func withLogManager(opts *app.AppOpts) {
+	logManager := singleton.GetLogManager()
+
+	opts.LogManager = &logManager
+}
+
+func withAppRouter(opts *app.AppOpts) {
+	appRouter := mux.NewRouter()
+
+	opts.AppRouter = appRouter
+}
+
+func withCryptManager(opts *app.AppOpts) {
+	envVariables := getEnvironmentVariables()
+	cryptManager := singleton.GetCryptManager([]byte(envVariables.CrypterSecretKey))
+
+	opts.CryptManager = &cryptManager
 }
 
 func getEnvironmentVariables() *types.Environment {

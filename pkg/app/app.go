@@ -5,20 +5,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"passvault/pkg/cookie"
-	"passvault/pkg/crypt"
-	"passvault/pkg/database"
-	"passvault/pkg/log"
 	"passvault/pkg/middleware"
 	"passvault/pkg/operation"
 	"passvault/pkg/types"
 	"passvault/pkg/validation"
-
-	"github.com/gorilla/mux"
 )
 
 const (
-	basePathTemplate           = "/api/%s"
+	basePathTemplate = "/api/%s"
 )
 
 var (
@@ -27,25 +21,18 @@ var (
 )
 
 type App struct {
-	appRouter       *mux.Router
-	appConfig       *AppConfig
-	logManager      *log.LogManagerInterface
-	environment     *types.Environment
-	databaseManager *database.DatabaseManagerInterface
-	cryptManager    *crypt.CryptManagerInterface
-	cookieManager   *cookie.CookieManagerInterface
+	appConfig *AppConfig
+	AppOpts
 }
 
-// todo refactor at some point(pattern WITH probably)
-func NewApp(appRouter *mux.Router, appConfig *AppConfig, logManager *log.LogManagerInterface, environment *types.Environment, databaseManager *database.DatabaseManagerInterface, cryptManager *crypt.CryptManagerInterface, cookieManager *cookie.CookieManagerInterface) *App {
-	app := &App{
-		appRouter:       appRouter,
-		appConfig:       appConfig,
-		logManager:      logManager,
-		environment:     environment,
-		databaseManager: databaseManager,
-		cryptManager:    cryptManager,
-		cookieManager:   cookieManager}
+func NewApp(opts ...AppOptFunc) *App {
+	appOpts := defaultAppOpts()
+
+	for _, fn := range opts {
+		fn(&appOpts)
+	}
+
+	app := &App{AppOpts: appOpts, appConfig: NewAppConfig()}
 
 	return app
 }
@@ -60,11 +47,11 @@ func (a *App) constructPath(operation operation.Operation) string {
 }
 
 func (a *App) addEndpoint(path string, handlerFunc func(http.ResponseWriter, *http.Request), methods ...string) {
-	a.appRouter.Path(path).HandlerFunc(handlerFunc).Methods(methods...)
+	a.AppOpts.AppRouter.Path(path).HandlerFunc(handlerFunc).Methods(methods...)
 }
 
 func (a *App) registerEndpoints() {
-	secretKey := a.environment.JWTSecretKey
+	secretKey := a.AppOpts.Environment.JWTSecretKey
 
 	//todo refactor at some point
 	a.addEndpoint(a.constructPath(operation.Login), a.login, http.MethodPost)
@@ -74,22 +61,22 @@ func (a *App) registerEndpoints() {
 }
 
 func (a *App) Run() error {
-	(*a.logManager).LogInfo(initMessage)
+	(*a.AppOpts.LogManager).LogInfo(initMessage)
 
 	a.registerEndpoints()
-	return http.ListenAndServe(a.appConfig.appPort, a.appRouter)
+	return http.ListenAndServe(a.appConfig.appPort, a.AppOpts.AppRouter)
 }
 
 func (a *App) login(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		(*a.logManager).LogError(err.Error())
+		(*a.AppOpts.LogManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if len(body) == 0 {
-		(*a.logManager).LogDebug(types.EmptyBodyMessage)
+		(*a.AppOpts.LogManager).LogDebug(types.EmptyBodyMessage)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -97,21 +84,21 @@ func (a *App) login(w http.ResponseWriter, r *http.Request) {
 	var credentials types.Credentials
 	err = json.Unmarshal(body, &credentials)
 	if err != nil {
-		(*a.logManager).LogError(err.Error())
+		(*a.AppOpts.LogManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	validation := validation.LoginValidation{PasswordToValidate: []byte(credentials.Password)}
 	if err := validation.Validate(); err != nil {
-		(*a.logManager).LogDebug(err.Error())
+		(*a.AppOpts.LogManager).LogDebug(err.Error())
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	cookie, err := (*a.cookieManager).ProduceCookie()
+	cookie, err := (*a.AppOpts.CookieManager).ProduceCookie()
 	if err != nil {
-		(*a.logManager).LogError(err.Error())
+		(*a.AppOpts.LogManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -123,13 +110,13 @@ func (a *App) login(w http.ResponseWriter, r *http.Request) {
 func (a *App) save(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		(*a.logManager).LogError(err.Error())
+		(*a.AppOpts.LogManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if len(body) == 0 {
-		(*a.logManager).LogDebug(types.EmptyBodyMessage)
+		(*a.AppOpts.LogManager).LogDebug(types.EmptyBodyMessage)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -137,43 +124,43 @@ func (a *App) save(w http.ResponseWriter, r *http.Request) {
 	var entry types.Entry
 	err = json.Unmarshal(body, &entry)
 	if err != nil {
-		(*a.logManager).LogError(err.Error())
+		(*a.AppOpts.LogManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	validation := validation.EntryValidation{EntryToValidate: entry}
 	if err := validation.Validate(); err != nil {
-		(*a.logManager).LogDebug(err.Error())
+		(*a.AppOpts.LogManager).LogDebug(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	found, err := (*a.databaseManager).Contains(entry.Domain)
+	found, err := (*a.AppOpts.DatabaseManager).Contains(entry.Domain)
 	if err != nil {
-		(*a.logManager).LogError(err.Error())
+		(*a.AppOpts.LogManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if found {
-		(*a.logManager).LogDebug(domainAlreadyExistsMessage)
+		(*a.AppOpts.LogManager).LogDebug(domainAlreadyExistsMessage)
 		w.WriteHeader(http.StatusConflict)
 		return
 	}
 
-	encryptedPassword, err := (*a.cryptManager).Encrypt(entry.Password)
+	encryptedPassword, err := (*a.AppOpts.CryptManager).Encrypt(entry.Password)
 	if err != nil {
-		(*a.logManager).LogError(err.Error())
+		(*a.AppOpts.LogManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	entry.Password = *encryptedPassword
 
-	err = (*a.databaseManager).Save(entry)
+	err = (*a.AppOpts.DatabaseManager).Save(entry)
 	if err != nil {
-		(*a.logManager).LogError(err.Error())
+		(*a.AppOpts.LogManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -184,13 +171,13 @@ func (a *App) save(w http.ResponseWriter, r *http.Request) {
 func (a *App) retrieve(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		(*a.logManager).LogError(err.Error())
+		(*a.AppOpts.LogManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if len(body) == 0 {
-		(*a.logManager).LogDebug(types.EmptyBodyMessage)
+		(*a.AppOpts.LogManager).LogDebug(types.EmptyBodyMessage)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -198,41 +185,41 @@ func (a *App) retrieve(w http.ResponseWriter, r *http.Request) {
 	var entry types.Entry
 	err = json.Unmarshal(body, &entry)
 	if err != nil {
-		(*a.logManager).LogError(err.Error())
+		(*a.AppOpts.LogManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	validation := validation.DomainValidation{DomainToValidate: entry.Domain}
 	if err := validation.Validate(); err != nil {
-		(*a.logManager).LogDebug(err.Error())
+		(*a.AppOpts.LogManager).LogDebug(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	found, err := (*a.databaseManager).Contains(entry.Domain)
+	found, err := (*a.AppOpts.DatabaseManager).Contains(entry.Domain)
 	if err != nil {
-		(*a.logManager).LogError(err.Error())
+		(*a.AppOpts.LogManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if !found {
-		(*a.logManager).LogDebug(domainDoesNotExistMessage)
+		(*a.AppOpts.LogManager).LogDebug(domainDoesNotExistMessage)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	queriedEntry, err := (*a.databaseManager).Get(entry.Domain)
+	queriedEntry, err := (*a.AppOpts.DatabaseManager).Get(entry.Domain)
 	if err != nil {
-		(*a.logManager).LogError(err.Error())
+		(*a.AppOpts.LogManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	decryptedPassword, err := (*a.cryptManager).Decrypt(queriedEntry.Password)
+	decryptedPassword, err := (*a.AppOpts.CryptManager).Decrypt(queriedEntry.Password)
 	if err != nil {
-		(*a.logManager).LogError(err.Error())
+		(*a.AppOpts.LogManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -241,7 +228,7 @@ func (a *App) retrieve(w http.ResponseWriter, r *http.Request) {
 
 	jsonBytes, err := json.Marshal(&queriedEntry)
 	if err != nil {
-		(*a.logManager).LogError(err.Error())
+		(*a.AppOpts.LogManager).LogError(err.Error())
 		return
 	}
 
@@ -251,13 +238,13 @@ func (a *App) retrieve(w http.ResponseWriter, r *http.Request) {
 func (a *App) update(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		(*a.logManager).LogError(err.Error())
+		(*a.AppOpts.LogManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if len(body) == 0 {
-		(*a.logManager).LogError(types.EmptyBodyMessage)
+		(*a.AppOpts.LogManager).LogError(types.EmptyBodyMessage)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -265,43 +252,43 @@ func (a *App) update(w http.ResponseWriter, r *http.Request) {
 	var entry types.Entry
 	err = json.Unmarshal(body, &entry)
 	if err != nil {
-		(*a.logManager).LogError(err.Error())
+		(*a.AppOpts.LogManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	validation := validation.EntryValidation{EntryToValidate: entry}
 	if err := validation.Validate(); err != nil {
-		(*a.logManager).LogError(err.Error())
+		(*a.AppOpts.LogManager).LogError(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	found, err := (*a.databaseManager).Contains(entry.Domain)
+	found, err := (*a.AppOpts.DatabaseManager).Contains(entry.Domain)
 	if err != nil {
-		(*a.logManager).LogError(err.Error())
+		(*a.AppOpts.LogManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if !found {
-		(*a.logManager).LogDebug(domainDoesNotExistMessage)
+		(*a.AppOpts.LogManager).LogDebug(domainDoesNotExistMessage)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	encryptedPassword, err := (*a.cryptManager).Encrypt(entry.Password)
+	encryptedPassword, err := (*a.AppOpts.CryptManager).Encrypt(entry.Password)
 	if err != nil {
-		(*a.logManager).LogError(err.Error())
+		(*a.AppOpts.LogManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	entry.Password = *encryptedPassword
 
-	err = (*a.databaseManager).Update(entry)
+	err = (*a.AppOpts.DatabaseManager).Update(entry)
 	if err != nil {
-		(*a.logManager).LogError(err.Error())
+		(*a.AppOpts.LogManager).LogError(err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
