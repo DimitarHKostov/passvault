@@ -15,12 +15,12 @@ type AppOptFunc func(*AppOpts)
 
 type AppOpts struct {
 	AppRouter       *mux.Router
-	LogManager      *log.LogManagerInterface
-	Environment     *types.Environment
-	DatabaseManager *database.DatabaseManagerInterface
-	CryptManager    *crypt.CryptManagerInterface
-	CookieManager   *cookie.CookieManagerInterface
-	Middleware      *middleware.MiddlewareInterface
+	LogManager      log.LogManagerInterface
+	Environment     types.Environment
+	DatabaseManager database.DatabaseManagerInterface
+	CryptManager    crypt.CryptManagerInterface
+	CookieManager   cookie.CookieManagerInterface
+	Middleware      middleware.MiddlewareInterface
 }
 
 func defaultAppOpts() AppOpts {

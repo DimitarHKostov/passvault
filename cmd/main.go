@@ -17,7 +17,7 @@ func main() {
 }
 
 func initApp() *app.App {
-	app := app.NewApp(withLogManager, withAppRouter, withCookieManager, withCryptManager, withDatabaseManager, withEnvironment, withMiddleware)
+	app := app.NewApp(withLogManager, withAppRouter, withCookieManager, withCryptManager, withDatabaseManager, withMiddleware)
 
 	return app
 }
@@ -26,33 +26,27 @@ func withMiddleware(opts *app.AppOpts) {
 	env := getEnvironmentVariables()
 	middleware := singleton.GetMiddleware(env)
 
-	opts.Middleware = &middleware
-}
-
-func withEnvironment(opts *app.AppOpts) {
-	env := getEnvironmentVariables()
-
-	opts.Environment = env
+	opts.Middleware = middleware
 }
 
 func withCookieManager(opts *app.AppOpts) {
 	env := getEnvironmentVariables()
 	cookieManager := singleton.GetCookieManager(env)
 
-	opts.CookieManager = &cookieManager
+	opts.CookieManager = cookieManager
 }
 
 func withDatabaseManager(opts *app.AppOpts) {
 	env := getEnvironmentVariables()
 	databaseManager := singleton.GetDatabaseManager(env)
 
-	opts.DatabaseManager = &databaseManager
+	opts.DatabaseManager = databaseManager
 }
 
 func withLogManager(opts *app.AppOpts) {
 	logManager := singleton.GetLogManager()
 
-	opts.LogManager = &logManager
+	opts.LogManager = logManager
 }
 
 func withAppRouter(opts *app.AppOpts) {
@@ -65,7 +59,7 @@ func withCryptManager(opts *app.AppOpts) {
 	env := getEnvironmentVariables()
 	cryptManager := singleton.GetCryptManager(env)
 
-	opts.CryptManager = &cryptManager
+	opts.CryptManager = cryptManager
 }
 
 func getEnvironmentVariables() *types.Environment {
