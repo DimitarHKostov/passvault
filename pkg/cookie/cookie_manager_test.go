@@ -51,6 +51,7 @@ var _ = Describe("Shopping cart", func() {
 		It("should succeed to create a new cookie", func() {
 			expectedCookie := produceMockCookie(types.CookieName, tokenValue, expirationTime, types.CookieHttpOnly)
 			jwtManagerMock.EXPECT().GenerateToken(expirationTime).Return(tokenValue, nil)
+			logManagerMock.EXPECT().LogDebug(successfulCookieCreationMessage)
 			actualCookie, err := cookieManager.ProduceCookie()
 
 			Expect(err).To(BeNil())
@@ -62,6 +63,7 @@ var _ = Describe("Shopping cart", func() {
 		It("should fail to create a cookie when jwt manager returns error", func() {
 			expectedError := errors.New(errorMessage)
 			jwtManagerMock.EXPECT().GenerateToken(expirationTime).Return("", expectedError)
+			logManagerMock.EXPECT().LogError("error occured when trying to generate token: error occurred while creating token")
 			actualCookie, err := cookieManager.ProduceCookie()
 
 			Expect(err).To(Equal(expectedError))

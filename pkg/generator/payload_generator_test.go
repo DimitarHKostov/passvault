@@ -41,6 +41,7 @@ var _ = Describe("Shopping cart", func() {
 
 	Context("GeneratePayload", func() {
 		It("should succeed to create a new payload", func() {
+			logManagerMock.EXPECT().LogDebug(successfulPayloadGenerationMessage)
 			payload, err := payloadGenerator.GeneratePayload(expirationTime)
 			Expect(err).To(BeNil())
 			Expect(payload).To(Not(BeNil()))

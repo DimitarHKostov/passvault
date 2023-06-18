@@ -46,6 +46,7 @@ var _ = Describe("Shopping cart", func() {
 	Context("Encrypt", func() {
 		It("should succeed to encrypt the password", func() {
 			cryptManager = NewCryptManager(logManagerMock, []byte(goodCryptManagerSecretKey))
+			logManagerMock.EXPECT().LogDebug(successfulEncryptionMessage)
 
 			encToString, err := cryptManager.Encrypt(testPassword)
 			Expect(err).To(BeNil())
@@ -54,6 +55,7 @@ var _ = Describe("Shopping cart", func() {
 
 		It("should fail to encrypt the password when the given crypter secret key is not 32 bits", func() {
 			cryptManager = NewCryptManager(logManagerMock, []byte(badCryptManagerSecretKey))
+			logManagerMock.EXPECT().LogError("encryption failed: crypto/aes: invalid key size 14")
 
 			expectedError := aes.KeySizeError(len(badCryptManagerSecretKey))
 			encToString, err := cryptManager.Encrypt(testPassword)
@@ -65,6 +67,8 @@ var _ = Describe("Shopping cart", func() {
 
 	Context("Decrypt", func() {
 		It("should succeed to decrypt the password", func() {
+			logManagerMock.EXPECT().LogDebug(successfulEncryptionMessage)
+			logManagerMock.EXPECT().LogDebug(successfulDecryptionMessage)
 			cryptManager = NewCryptManager(logManagerMock, []byte(goodCryptManagerSecretKey))
 
 			encToString, err := cryptManager.Encrypt(testPassword)
@@ -78,6 +82,7 @@ var _ = Describe("Shopping cart", func() {
 		})
 
 		It("should fail to decrypt the password when the given crypter secret key is not 32 bits", func() {
+			logManagerMock.EXPECT().LogError("decryption failed :crypto/aes: invalid key size 14")
 			cryptManager = NewCryptManager(logManagerMock, []byte(badCryptManagerSecretKey))
 
 			expectedError := aes.KeySizeError(len(badCryptManagerSecretKey))

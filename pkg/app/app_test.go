@@ -118,11 +118,13 @@ var _ = Describe("Shopping cart", func() {
 			Expect(err).To(BeNil())
 			request, err := produceRequest(http.MethodGet, "", strings.NewReader(string(correctCredentialsJson)))
 			Expect(err).To(BeNil())
-			cookieManagerMock.EXPECT().ProduceCookie().Return(produceCookie(mockExpirationTime, mockToken), nil)
+			cookie := produceCookie(mockExpirationTime, mockToken)
+			cookieManagerMock.EXPECT().ProduceCookie().Return(cookie, nil)
 			logManagerMock.EXPECT().LogDebug(successfulLoginMessage)
 
 			app.login(&responseRecorder, request)
 			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusOK))
+			Expect(responseRecorder.Result().Header.Get("Set-Cookie")).To(Equal(cookie.String()))
 		})
 	})
 

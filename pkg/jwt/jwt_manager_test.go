@@ -60,6 +60,7 @@ var _ = Describe("Shopping cart", func() {
 		It("should fail to generate a new token when payload generator fails", func() {
 			expectedError := errors.New("payload generation fails")
 			payloadMock.EXPECT().GeneratePayload(expirationTime).Return(nil, expectedError)
+			logManagerMock.EXPECT().LogError("failed to generate payload: payload generation fails")
 
 			token, err := jwtManager.GenerateToken(expirationTime)
 			Expect(err).To(Equal(expectedError))
@@ -74,6 +75,7 @@ var _ = Describe("Shopping cart", func() {
 			token, err := jwtManager.GenerateToken(expirationTime)
 			Expect(err).To(BeNil())
 			Expect(token).To(Not(Equal("")))
+			logManagerMock.EXPECT().LogDebug(successfulTokenVerification)
 
 			payload, err := jwtManager.VerifyToken(token)
 			Expect(err).To(BeNil())
