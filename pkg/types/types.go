@@ -49,4 +49,5 @@ type Environment struct {
 	DbUsername       string
 	DbPassword       string
 	DbName           string
+	VaultPassword    []byte
 }

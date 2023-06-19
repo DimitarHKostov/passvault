@@ -8,6 +8,9 @@ import (
 	"passvault/pkg/types"
 
 	"github.com/gorilla/mux"
+	"golang.org/x/crypto/bcrypt"
+
+	ll "log"
 )
 
 const (
@@ -19,6 +22,7 @@ const (
 	envDbPassword       = "DB_PASSWORD"
 	envDbName           = "DB_NAME"
 	envLogLevel         = "LOG_LEVEL"
+	envVaultPassword    = "VAULT_PASSWORD"
 )
 
 func main() {
@@ -30,9 +34,21 @@ func main() {
 }
 
 func initApp() *app.App {
-	app := app.NewApp(withLogManager, withAppRouter, withCookieManager, withCryptManager, withDatabaseManager, withMiddleware)
+	app := app.NewApp(withLogManager, withAppRouter, withCookieManager, withCryptManager, withDatabaseManager, withMiddleware, withVaultPasswordHash)
 
 	return app
+}
+
+func withVaultPasswordHash(opts *app.AppOpts) {
+	env := getEnvironmentVariables()
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(env.VaultPassword), bcrypt.DefaultCost)
+	if err != nil {
+		panic(err)
+	}
+
+	ll.Println("e", env.VaultPassword)
+
+	opts.VaultPassword = hashedPassword
 }
 
 func withMiddleware(opts *app.AppOpts) {
@@ -91,6 +107,7 @@ func getEnvironmentVariables() *types.Environment {
 		DbPassword:       os.Getenv(envDbPassword),
 		DbName:           os.Getenv(envDbName),
 		LogLevel:         getEnvVarOrDefault(os.Getenv(envLogLevel), types.DefaultLogLevel),
+		VaultPassword:    []byte(os.Getenv(envVaultPassword)),
 	}
 }
 

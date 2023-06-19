@@ -21,6 +21,7 @@ type AppOpts struct {
 	CryptManager    crypt.CryptManagerInterface
 	CookieManager   cookie.CookieManagerInterface
 	Middleware      middleware.MiddlewareInterface
+	VaultPassword   []byte
 }
 
 func defaultAppOpts() AppOpts {

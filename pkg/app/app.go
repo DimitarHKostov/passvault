@@ -77,7 +77,7 @@ func (a *App) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	validation := validation.LoginValidation{PasswordToValidate: []byte(credentials.Password)}
+	validation := validation.LoginValidation{PasswordToValidate: []byte(credentials.Password), ActualPassword: a.AppOpts.VaultPassword}
 	if err := validation.Validate(); err != nil {
 		a.AppOpts.LogManager.LogDebug(err.Error())
 		w.WriteHeader(http.StatusUnauthorized)
