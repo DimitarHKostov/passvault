@@ -106,7 +106,7 @@ func (a *App) save(w http.ResponseWriter, r *http.Request) {
 
 	if len(body) == 0 {
 		a.AppOpts.LogManager.LogDebug(types.EmptyBodyMessage)
-		w.WriteHeader(http.StatusUnauthorized)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -176,7 +176,7 @@ func (a *App) retrieve(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, &entry)
 	if err != nil {
 		a.AppOpts.LogManager.LogError(err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -222,6 +222,7 @@ func (a *App) retrieve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	a.AppOpts.LogManager.LogDebug(successfulRetrieveMessage)
 	w.Write(jsonBytes)
 }
 

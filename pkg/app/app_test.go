@@ -134,16 +134,16 @@ var _ = Describe("Shopping cart", func() {
 	})
 
 	Context("Save", func() {
-		It("should fail with 401 when the body in the request is empty", func() {
+		It("should fail with 400 when the body in the request is empty", func() {
 			request, err := produceRequest(http.MethodGet, "", strings.NewReader(""))
 			Expect(err).To(BeNil())
 			logManagerMock.EXPECT().LogDebug(types.EmptyBodyMessage)
 
 			app.save(&responseRecorder, request)
-			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusUnauthorized))
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusBadRequest))
 		})
 
-		It("should fail with 400 when the credentials in the body are not in json format", func() {
+		It("should fail with 400 when the entry in the body is not in json format", func() {
 			request, err := produceRequest(http.MethodGet, "", strings.NewReader("<html>test</html>"))
 			Expect(err).To(BeNil())
 			logManagerMock.EXPECT().LogError("invalid character '<' looking for beginning of value")
@@ -233,7 +233,7 @@ var _ = Describe("Shopping cart", func() {
 			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusInternalServerError))
 		})
 
-		It("should succeed to save entry to database", func() {
+		It("should return 201 and succeed to save entry to database", func() {
 			entry := produceEntry(mockDomain, mockCorrectUsername, mockCorrectPassword)
 			entryJson, err := json.Marshal(entry)
 			Expect(err).To(BeNil())
@@ -251,11 +251,112 @@ var _ = Describe("Shopping cart", func() {
 		})
 	})
 
-	Context("Update", func() {
+	Context("Retrieve", func() {
+		It("should fail with 400 when the body in the request is empty", func() {
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(""))
+			Expect(err).To(BeNil())
+			logManagerMock.EXPECT().LogDebug(types.EmptyBodyMessage)
 
+			app.retrieve(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusBadRequest))
+		})
+
+		It("should fail with 400 when the entry in the body is not in json format", func() {
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader("<html>test</html>"))
+			Expect(err).To(BeNil())
+			logManagerMock.EXPECT().LogError("invalid character '<' looking for beginning of value")
+
+			app.retrieve(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusBadRequest))
+		})
+
+		XIt("should fail with 400 when the domain validation fails", func() {
+			entry := produceEntry(mockDomain, "", "")
+			entryJson, err := json.Marshal(entry)
+			Expect(err).To(BeNil())
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(string(entryJson)))
+			Expect(err).To(BeNil())
+
+			logManagerMock.EXPECT().LogDebug("msg")
+
+			app.retrieve(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusBadRequest))
+		})
+
+		It("should fail with 500 when the database manager fails to return if domain already exists", func() {
+			entry := produceEntry(mockDomain, mockCorrectUsername, mockCorrectPassword)
+			entryJson, err := json.Marshal(entry)
+			Expect(err).To(BeNil())
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(string(entryJson)))
+			Expect(err).To(BeNil())
+			databaseManagerMock.EXPECT().Contains(mockDomain).Return(false, errors.New("error"))
+			logManagerMock.EXPECT().LogError("error")
+
+			app.retrieve(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusInternalServerError))
+		})
+
+		It("should fail with 404 when the domain does not exists", func() {
+			entry := produceEntry(mockDomain, mockCorrectUsername, mockCorrectPassword)
+			entryJson, err := json.Marshal(entry)
+			Expect(err).To(BeNil())
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(string(entryJson)))
+			Expect(err).To(BeNil())
+			databaseManagerMock.EXPECT().Contains(mockDomain).Return(false, nil)
+			logManagerMock.EXPECT().LogDebug(domainDoesNotExistMessage)
+
+			app.retrieve(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusNotFound))
+		})
+
+		It("should fail with 500 when the database manager fails to return the corresponding entry", func() {
+			entry := produceEntry(mockDomain, mockCorrectUsername, mockCorrectPassword)
+			entryJson, err := json.Marshal(entry)
+			Expect(err).To(BeNil())
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(string(entryJson)))
+			Expect(err).To(BeNil())
+			databaseManagerMock.EXPECT().Contains(mockDomain).Return(true, nil)
+			databaseManagerMock.EXPECT().Get(mockDomain).Return(nil, errors.New("error"))
+			logManagerMock.EXPECT().LogError("error")
+
+			app.retrieve(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusInternalServerError))
+		})
+
+		It("should fail with 500 when the crypt manager fails to decrypt the password", func() {
+			entry := produceEntry(mockDomain, mockCorrectUsername, mockCorrectPassword)
+			entryJson, err := json.Marshal(entry)
+			Expect(err).To(BeNil())
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(string(entryJson)))
+			Expect(err).To(BeNil())
+			databaseManagerMock.EXPECT().Contains(mockDomain).Return(true, nil)
+			databaseManagerMock.EXPECT().Get(mockDomain).Return(&entry, nil) //tuka
+			cryptManagerMock.EXPECT().Decrypt(mockCorrectPassword).Return(nil, errors.New("error"))
+			logManagerMock.EXPECT().LogError("error")
+
+			app.retrieve(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusInternalServerError))
+		})
+
+		It("succeed with 200 and return the entry from the db", func() {
+			entry := produceEntry(mockDomain, mockCorrectUsername, mockCorrectPassword)
+			entryJson, err := json.Marshal(entry)
+			Expect(err).To(BeNil())
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(string(entryJson)))
+			Expect(err).To(BeNil())
+			databaseManagerMock.EXPECT().Contains(mockDomain).Return(true, nil)
+			databaseManagerMock.EXPECT().Get(mockDomain).Return(&entry, nil)
+			correctPasswordPtr := new(string)
+			*correctPasswordPtr = mockCorrectPassword
+			cryptManagerMock.EXPECT().Decrypt(mockCorrectPassword).Return(correctPasswordPtr, nil)
+			logManagerMock.EXPECT().LogDebug(successfulRetrieveMessage)
+
+			app.retrieve(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusOK))
+		})
 	})
 
-	Context("Retrieve", func() {
+	Context("Update", func() {
 
 	})
 })

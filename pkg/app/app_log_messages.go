@@ -6,4 +6,5 @@ const (
 	domainDoesNotExistMessage  = "domain does not exist"
 	successfulLoginMessage     = "login successful"
 	successfulSaveMessage      = "save to db successful"
+	successfulRetrieveMessage  = "entry retrieve successful"
 )
