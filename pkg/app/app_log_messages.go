@@ -7,4 +7,5 @@ const (
 	successfulLoginMessage     = "login successful"
 	successfulSaveMessage      = "save to db successful"
 	successfulRetrieveMessage  = "entry retrieve successful"
+	successfulUpdateMessage    = "entry update successful"
 )

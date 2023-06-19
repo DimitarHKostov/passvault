@@ -235,7 +235,7 @@ func (a *App) update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(body) == 0 {
-		a.AppOpts.LogManager.LogError(types.EmptyBodyMessage)
+		a.AppOpts.LogManager.LogDebug(types.EmptyBodyMessage)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -244,13 +244,13 @@ func (a *App) update(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, &entry)
 	if err != nil {
 		a.AppOpts.LogManager.LogError(err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	validation := validation.EntryValidation{EntryToValidate: entry}
 	if err := validation.Validate(); err != nil {
-		a.AppOpts.LogManager.LogError(err.Error())
+		a.AppOpts.LogManager.LogDebug(err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -284,5 +284,6 @@ func (a *App) update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	a.AppOpts.LogManager.LogDebug(successfulUpdateMessage)
 	w.WriteHeader(http.StatusOK)
 }

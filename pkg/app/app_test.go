@@ -330,7 +330,7 @@ var _ = Describe("Shopping cart", func() {
 			request, err := produceRequest(http.MethodGet, "", strings.NewReader(string(entryJson)))
 			Expect(err).To(BeNil())
 			databaseManagerMock.EXPECT().Contains(mockDomain).Return(true, nil)
-			databaseManagerMock.EXPECT().Get(mockDomain).Return(&entry, nil) //tuka
+			databaseManagerMock.EXPECT().Get(mockDomain).Return(&entry, nil)
 			cryptManagerMock.EXPECT().Decrypt(mockCorrectPassword).Return(nil, errors.New("error"))
 			logManagerMock.EXPECT().LogError("error")
 
@@ -357,7 +357,121 @@ var _ = Describe("Shopping cart", func() {
 	})
 
 	Context("Update", func() {
+		It("should fail with 400 when the body in the request is empty", func() {
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(""))
+			Expect(err).To(BeNil())
+			logManagerMock.EXPECT().LogDebug(types.EmptyBodyMessage)
 
+			app.update(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusBadRequest))
+		})
+
+		It("should fail with 400 when the entry in the body is not in json format", func() {
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader("<html>test</html>"))
+			Expect(err).To(BeNil())
+			logManagerMock.EXPECT().LogError("invalid character '<' looking for beginning of value")
+
+			app.update(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusBadRequest))
+		})
+
+		It("should fail with 400 when the username in the entry is less than 6 symbols", func() {
+			entry := produceEntry(mockDomain, mockShortUsername, mockShortPassword)
+			entryJson, err := json.Marshal(entry)
+			Expect(err).To(BeNil())
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(string(entryJson)))
+			Expect(err).To(BeNil())
+			logManagerMock.EXPECT().LogDebug("input too short, must be at least 6 characters")
+
+			app.update(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusBadRequest))
+		})
+
+		It("should fail with 400 when the password in the entry is less than 6 symbols", func() {
+			entry := produceEntry(mockDomain, mockShortUsername, mockShortPassword)
+			entryJson, err := json.Marshal(entry)
+			Expect(err).To(BeNil())
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(string(entryJson)))
+			Expect(err).To(BeNil())
+			logManagerMock.EXPECT().LogDebug("input too short, must be at least 6 characters")
+
+			app.update(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusBadRequest))
+		})
+
+		It("should fail with 500 when the database manager fails to return if domain already exists", func() {
+			entry := produceEntry(mockDomain, mockCorrectUsername, mockCorrectPassword)
+			entryJson, err := json.Marshal(entry)
+			Expect(err).To(BeNil())
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(string(entryJson)))
+			Expect(err).To(BeNil())
+			databaseManagerMock.EXPECT().Contains(mockDomain).Return(false, errors.New("error"))
+			logManagerMock.EXPECT().LogError("error")
+
+			app.update(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusInternalServerError))
+		})
+
+		It("should fail with 404 when the domain does not exists", func() {
+			entry := produceEntry(mockDomain, mockCorrectUsername, mockCorrectPassword)
+			entryJson, err := json.Marshal(entry)
+			Expect(err).To(BeNil())
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(string(entryJson)))
+			Expect(err).To(BeNil())
+			databaseManagerMock.EXPECT().Contains(mockDomain).Return(false, nil)
+			logManagerMock.EXPECT().LogDebug(domainDoesNotExistMessage)
+
+			app.update(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusNotFound))
+		})
+
+		It("should fail with 500 when the crypt manager fails to encrypt the password", func() {
+			entry := produceEntry(mockDomain, mockCorrectUsername, mockCorrectPassword)
+			entryJson, err := json.Marshal(entry)
+			Expect(err).To(BeNil())
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(string(entryJson)))
+			Expect(err).To(BeNil())
+			databaseManagerMock.EXPECT().Contains(mockDomain).Return(true, nil)
+			cryptManagerMock.EXPECT().Encrypt(mockCorrectPassword).Return(nil, errors.New("error"))
+			logManagerMock.EXPECT().LogError("error")
+
+			app.update(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusInternalServerError))
+		})
+
+		It("should fail with 500 when the database manager fails to update the password", func() {
+			entry := produceEntry(mockDomain, mockCorrectUsername, mockCorrectPassword)
+			entryJson, err := json.Marshal(entry)
+			Expect(err).To(BeNil())
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(string(entryJson)))
+			Expect(err).To(BeNil())
+			databaseManagerMock.EXPECT().Contains(mockDomain).Return(true, nil)
+			correctPasswordPtr := new(string)
+			*correctPasswordPtr = mockCorrectPassword
+			cryptManagerMock.EXPECT().Encrypt(mockCorrectPassword).Return(correctPasswordPtr, nil)
+			databaseManagerMock.EXPECT().Update(entry).Return(errors.New("error"))
+			logManagerMock.EXPECT().LogError("error")
+
+			app.update(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusInternalServerError))
+		})
+
+		It("should return 200 and update the entry", func() {
+			entry := produceEntry(mockDomain, mockCorrectUsername, mockCorrectPassword)
+			entryJson, err := json.Marshal(entry)
+			Expect(err).To(BeNil())
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(string(entryJson)))
+			Expect(err).To(BeNil())
+			databaseManagerMock.EXPECT().Contains(mockDomain).Return(true, nil)
+			correctPasswordPtr := new(string)
+			*correctPasswordPtr = mockCorrectPassword
+			cryptManagerMock.EXPECT().Encrypt(mockCorrectPassword).Return(correctPasswordPtr, nil)
+			databaseManagerMock.EXPECT().Update(entry).Return(nil)
+			logManagerMock.EXPECT().LogDebug(successfulUpdateMessage)
+
+			app.update(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusOK))
+		})
 	})
 })
 
