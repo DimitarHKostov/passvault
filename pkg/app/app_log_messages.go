@@ -5,4 +5,5 @@ const (
 	domainAlreadyExistsMessage = "domain already exists"
 	domainDoesNotExistMessage  = "domain does not exist"
 	successfulLoginMessage     = "login successful"
+	successfulSaveMessage      = "save to db successful"
 )

@@ -2,6 +2,7 @@ package main
 
 import (
 	"passvault/pkg/app"
+	"passvault/pkg/log"
 	"passvault/pkg/singleton"
 	"passvault/pkg/types"
 
@@ -44,7 +45,13 @@ func withDatabaseManager(opts *app.AppOpts) {
 }
 
 func withLogManager(opts *app.AppOpts) {
-	logManager := singleton.GetLogManager()
+	env := getEnvironmentVariables()
+
+	withLogLevel := func(logOpts *log.LogOpts) {
+		logOpts.Level = env.LogLevel
+	}
+
+	logManager := singleton.GetLogManager(withLogLevel)
 
 	opts.LogManager = logManager
 }
@@ -71,5 +78,6 @@ func getEnvironmentVariables() *types.Environment {
 		Username:         "root",
 		Password:         "password",
 		DatabaseName:     "db",
+		LogLevel:         "debug",
 	}
 }

@@ -32,7 +32,7 @@ type Entry struct {
 func (payload *Payload) Valid() error {
 	if time.Now().After(payload.ExpiredAt) {
 		errorMessage := "token has expired"
-		
+
 		return errors.New(errorMessage)
 	}
 
@@ -40,6 +40,7 @@ func (payload *Payload) Valid() error {
 }
 
 type Environment struct {
+	LogLevel         string
 	JWTSecretKey     string
 	CrypterSecretKey string
 	Host             string

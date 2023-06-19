@@ -9,7 +9,7 @@ import (
 const (
 	argumentsNotSufficientErrorMessage = "args not sufficient"
 	minSize                            = 6
-	minSizeErrorMessage                = "input too short, must be at least 8 characters"
+	minSizeErrorMessage                = "input too short, must be at least 6 characters"
 	forbiddenCharacters                = "\"'`;"
 	forbiddenCharactersErrorMessage    = "input contains forbidden character"
 )

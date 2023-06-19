@@ -42,8 +42,13 @@ var _ = Describe("Shopping cart", func() {
 	)
 
 	const (
-		mockExpirationTime = 5 * time.Minute
-		mockToken          = "token-value"
+		mockExpirationTime  = 5 * time.Minute
+		mockToken           = "token-value"
+		mockDomain          = "domain.com"
+		mockShortUsername   = "short"
+		mockShortPassword   = "short"
+		mockCorrectUsername = "correct@test.com"
+		mockCorrectPassword = "correctPassword98765"
 	)
 
 	var _ = BeforeEach(func() {
@@ -129,7 +134,121 @@ var _ = Describe("Shopping cart", func() {
 	})
 
 	Context("Save", func() {
+		It("should fail with 401 when the body in the request is empty", func() {
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(""))
+			Expect(err).To(BeNil())
+			logManagerMock.EXPECT().LogDebug(types.EmptyBodyMessage)
 
+			app.save(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusUnauthorized))
+		})
+
+		It("should fail with 400 when the credentials in the body are not in json format", func() {
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader("<html>test</html>"))
+			Expect(err).To(BeNil())
+			logManagerMock.EXPECT().LogError("invalid character '<' looking for beginning of value")
+
+			app.save(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusBadRequest))
+		})
+
+		It("should fail with 400 when the username in the entry is less than 6 symbols", func() {
+			entry := produceEntry(mockDomain, mockShortUsername, mockShortPassword)
+			entryJson, err := json.Marshal(entry)
+			Expect(err).To(BeNil())
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(string(entryJson)))
+			Expect(err).To(BeNil())
+			logManagerMock.EXPECT().LogDebug("input too short, must be at least 6 characters")
+
+			app.save(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusBadRequest))
+		})
+
+		It("should fail with 400 when the password in the entry is less than 6 symbols", func() {
+			entry := produceEntry(mockDomain, mockShortUsername, mockShortPassword)
+			entryJson, err := json.Marshal(entry)
+			Expect(err).To(BeNil())
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(string(entryJson)))
+			Expect(err).To(BeNil())
+			logManagerMock.EXPECT().LogDebug("input too short, must be at least 6 characters")
+
+			app.save(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusBadRequest))
+		})
+
+		It("should fail with 500 when the database manager fails to return if domain already exists", func() {
+			entry := produceEntry(mockDomain, mockCorrectUsername, mockCorrectPassword)
+			entryJson, err := json.Marshal(entry)
+			Expect(err).To(BeNil())
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(string(entryJson)))
+			Expect(err).To(BeNil())
+			databaseManagerMock.EXPECT().Contains(mockDomain).Return(false, errors.New("error"))
+			logManagerMock.EXPECT().LogError("error")
+
+			app.save(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusInternalServerError))
+		})
+
+		It("should fail with 409 when the domain already exists", func() {
+			entry := produceEntry(mockDomain, mockCorrectUsername, mockCorrectPassword)
+			entryJson, err := json.Marshal(entry)
+			Expect(err).To(BeNil())
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(string(entryJson)))
+			Expect(err).To(BeNil())
+			databaseManagerMock.EXPECT().Contains(mockDomain).Return(true, nil)
+			logManagerMock.EXPECT().LogDebug(domainAlreadyExistsMessage)
+
+			app.save(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusConflict))
+		})
+
+		It("should fail with 500 when the crypt manager fails", func() {
+			entry := produceEntry(mockDomain, mockCorrectUsername, mockCorrectPassword)
+			entryJson, err := json.Marshal(entry)
+			Expect(err).To(BeNil())
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(string(entryJson)))
+			Expect(err).To(BeNil())
+			databaseManagerMock.EXPECT().Contains(mockDomain).Return(false, nil)
+			cryptManagerMock.EXPECT().Encrypt(mockCorrectPassword).Return(nil, errors.New("error"))
+			logManagerMock.EXPECT().LogError("error")
+
+			app.save(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusInternalServerError))
+		})
+
+		It("should fail with 500 when the database manager fails to save to the database", func() {
+			entry := produceEntry(mockDomain, mockCorrectUsername, mockCorrectPassword)
+			entryJson, err := json.Marshal(entry)
+			Expect(err).To(BeNil())
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(string(entryJson)))
+			Expect(err).To(BeNil())
+			databaseManagerMock.EXPECT().Contains(mockDomain).Return(false, nil)
+			correctPasswordPtr := new(string)
+			*correctPasswordPtr = mockCorrectPassword
+			cryptManagerMock.EXPECT().Encrypt(mockCorrectPassword).Return(correctPasswordPtr, nil)
+			databaseManagerMock.EXPECT().Save(entry).Return(errors.New("error"))
+			logManagerMock.EXPECT().LogError("error")
+
+			app.save(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusInternalServerError))
+		})
+
+		It("should succeed to save entry to database", func() {
+			entry := produceEntry(mockDomain, mockCorrectUsername, mockCorrectPassword)
+			entryJson, err := json.Marshal(entry)
+			Expect(err).To(BeNil())
+			request, err := produceRequest(http.MethodGet, "", strings.NewReader(string(entryJson)))
+			Expect(err).To(BeNil())
+			databaseManagerMock.EXPECT().Contains(mockDomain).Return(false, nil)
+			correctPasswordPtr := new(string)
+			*correctPasswordPtr = mockCorrectPassword
+			cryptManagerMock.EXPECT().Encrypt(mockCorrectPassword).Return(correctPasswordPtr, nil)
+			databaseManagerMock.EXPECT().Save(entry).Return(nil)
+			logManagerMock.EXPECT().LogDebug(successfulSaveMessage)
+
+			app.save(&responseRecorder, request)
+			Expect(responseRecorder.Result().StatusCode).To(Equal(http.StatusCreated))
+		})
 	})
 
 	Context("Update", func() {
@@ -151,4 +270,8 @@ func produceCredentials(password string) types.Credentials {
 
 func produceCookie(expirationTime time.Duration, token string) *http.Cookie {
 	return &http.Cookie{Name: types.CookieName, Value: token, Expires: time.Now().Add(expirationTime), HttpOnly: types.CookieHttpOnly}
+}
+
+func produceEntry(domain, username, password string) types.Entry {
+	return types.Entry{Domain: domain, Username: username, Password: password}
 }

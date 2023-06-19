@@ -14,10 +14,6 @@ const (
 	basePathTemplate = "/api/%s"
 )
 
-var (
-	basePath *string
-)
-
 type App struct {
 	appConfig *AppConfig
 	AppOpts
@@ -35,17 +31,11 @@ func NewApp(opts ...AppOptFunc) *App {
 	return app
 }
 
-func (a *App) constructPath(operation operation.Operation) string {
-	if basePath == nil {
-		basePath = new(string)
-		*basePath = fmt.Sprintf(basePathTemplate, a.appConfig.appVersion)
-	}
+func (a *App) Run() error {
+	a.AppOpts.LogManager.LogInfo(initMessage)
 
-	return *basePath + fmt.Sprintf("/%s", operation.String())
-}
-
-func (a *App) addEndpoint(path string, handlerFunc func(http.ResponseWriter, *http.Request), methods ...string) {
-	a.AppOpts.AppRouter.Path(path).HandlerFunc(handlerFunc).Methods(methods...)
+	a.registerEndpoints()
+	return http.ListenAndServe(a.appConfig.appPort, a.AppOpts.AppRouter)
 }
 
 func (a *App) registerEndpoints() {
@@ -57,11 +47,12 @@ func (a *App) registerEndpoints() {
 	a.addEndpoint(a.constructPath(operation.Update), middleware.Intercept(http.HandlerFunc(a.update)), http.MethodPut)
 }
 
-func (a *App) Run() error {
-	a.AppOpts.LogManager.LogInfo(initMessage)
+func (a *App) addEndpoint(path string, handlerFunc func(http.ResponseWriter, *http.Request), methods ...string) {
+	a.AppOpts.AppRouter.Path(path).HandlerFunc(handlerFunc).Methods(methods...)
+}
 
-	a.registerEndpoints()
-	return http.ListenAndServe(a.appConfig.appPort, a.AppOpts.AppRouter)
+func (a *App) constructPath(operation operation.Operation) string {
+	return fmt.Sprintf("/v1/api/%s", operation.String())
 }
 
 func (a *App) login(w http.ResponseWriter, r *http.Request) {
@@ -115,7 +106,7 @@ func (a *App) save(w http.ResponseWriter, r *http.Request) {
 
 	if len(body) == 0 {
 		a.AppOpts.LogManager.LogDebug(types.EmptyBodyMessage)
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
@@ -123,7 +114,7 @@ func (a *App) save(w http.ResponseWriter, r *http.Request) {
 	err = json.Unmarshal(body, &entry)
 	if err != nil {
 		a.AppOpts.LogManager.LogError(err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -163,7 +154,8 @@ func (a *App) save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	a.AppOpts.LogManager.LogDebug(successfulSaveMessage)
+	w.WriteHeader(http.StatusCreated)
 }
 
 func (a *App) retrieve(w http.ResponseWriter, r *http.Request) {

@@ -62,9 +62,9 @@ func GetCryptManager(env *types.Environment) crypt.CryptManagerInterface {
 	return cryptManager
 }
 
-func GetLogManager() log.LogManagerInterface {
+func GetLogManager(opts ...log.LogOptsFn) log.LogManagerInterface {
 	if logManager == nil {
-		logManager = log.NewLogManager()
+		logManager = log.NewLogManager(opts...)
 	}
 
 	return logManager
