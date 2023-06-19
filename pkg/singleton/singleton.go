@@ -47,7 +47,7 @@ func GetJwtManager(env *types.Environment) jwt.JWTManagerInterface {
 
 func GetDatabaseManager(env *types.Environment) database.DatabaseManagerInterface {
 	if databaseManager == nil {
-		databaseConfig := database.NewDatabaseConfig(env.Host, env.Port, env.Username, env.Password, env.DatabaseName)
+		databaseConfig := database.NewDatabaseConfig(env.DbHost, env.DbPassword, env.DbUsername, env.DbPassword, env.DbName)
 		databaseManager = database.NewDatabaseManager(GetLogManager(), databaseConfig)
 	}
 

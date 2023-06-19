@@ -11,6 +11,7 @@ const (
 	CookieName       = "passvault-cookie"
 	EmptyBodyMessage = "empty body"
 	CookieHttpOnly   = true
+	DefaultLogLevel  = "info"
 )
 
 type Credentials struct {
@@ -43,9 +44,9 @@ type Environment struct {
 	LogLevel         string
 	JWTSecretKey     string
 	CrypterSecretKey string
-	Host             string
-	Port             string
-	Username         string
-	Password         string
-	DatabaseName     string
+	DbHost           string
+	DbPort           string
+	DbUsername       string
+	DbPassword       string
+	DbName           string
 }

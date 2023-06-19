@@ -1,12 +1,24 @@
 package main
 
 import (
+	"os"
 	"passvault/pkg/app"
 	"passvault/pkg/log"
 	"passvault/pkg/singleton"
 	"passvault/pkg/types"
 
 	"github.com/gorilla/mux"
+)
+
+const (
+	envJwtSecretKey     = "JWT_SECRET_KEY"
+	envCrypterSecretKey = "CRYPTER_SECRET_KEY"
+	envDbHost           = "DB_HOST"
+	envDbPort           = "DB_PORT"
+	envDbUsername       = "DB_USERNAME"
+	envDbPassword       = "DB_PASSWORD"
+	envDbName           = "DB_NAME"
+	envLogLevel         = "LOG_LEVEL"
 )
 
 func main() {
@@ -71,13 +83,21 @@ func withCryptManager(opts *app.AppOpts) {
 
 func getEnvironmentVariables() *types.Environment {
 	return &types.Environment{
-		JWTSecretKey:     "asdasasdasasdasasdasasdasaa",
-		CrypterSecretKey: "this is secret key enough 32 bit",
-		Host:             "localhost",
-		Port:             "3306",
-		Username:         "root",
-		Password:         "password",
-		DatabaseName:     "db",
-		LogLevel:         "debug",
+		JWTSecretKey:     os.Getenv(envJwtSecretKey),
+		CrypterSecretKey: os.Getenv(envCrypterSecretKey),
+		DbHost:           os.Getenv(envDbHost),
+		DbPort:           os.Getenv(envDbPort),
+		DbUsername:       os.Getenv(envDbUsername),
+		DbPassword:       os.Getenv(envDbPassword),
+		DbName:           os.Getenv(envDbName),
+		LogLevel:         getEnvVarOrDefault(os.Getenv(envLogLevel), types.DefaultLogLevel),
 	}
+}
+
+func getEnvVarOrDefault(envVar, defaultValue string) string {
+	if envVar != "" {
+		return envVar
+	}
+
+	return defaultValue
 }

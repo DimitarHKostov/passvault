@@ -1,8 +1,6 @@
 package log
 
-const (
-	defaultLogLevel = "info"
-)
+import "passvault/pkg/types"
 
 type LogOptsFn func(*LogOpts)
 
@@ -11,5 +9,5 @@ type LogOpts struct {
 }
 
 func defaultLogOpts() LogOpts {
-	return LogOpts{Level: defaultLogLevel}
+	return LogOpts{Level: types.DefaultLogLevel}
 }
